@@ -194,7 +194,6 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="Scripts\App\Bundle.js" />
     <Content Include="Scripts\App\Cookies.js" />
     <Content Include="Scripts\App\Index.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />

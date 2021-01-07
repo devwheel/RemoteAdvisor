@@ -445,8 +445,6 @@ const ToggleVideo = async () => {
 
         videoSwitch.classList.remove("inactive-control");
         videoSwitch.classList.add("active-control");
-        // document.getElementById("my-cam-on").style.display = 'block';
-        // document.getElementById("my-cam-off").style.display = 'none'
         document.getElementById("my-cam-on").classList.remove("hidden");
         document.getElementById("my-cam-off").classList.add("hidden");
 
@@ -465,8 +463,6 @@ const ToggleVideo = async () => {
 
         videoSwitch.classList.remove("active-control");
         videoSwitch.classList.add("inactive-control");
-        // document.getElementById("my-cam-on").style.display = 'none';
-        // document.getElementById("my-cam-off").style.display = 'block'
         document.getElementById("my-cam-on").classList.add("hidden");
         document.getElementById("my-cam-off").classList.remove("hidden");
 

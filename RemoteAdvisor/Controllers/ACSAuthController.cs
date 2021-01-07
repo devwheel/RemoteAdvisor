@@ -14,7 +14,7 @@ namespace RemoteAdvisor.Controllers
     public class ACSAuthController : ApiController
     {
         //Connection string to the ACS instance
-        string connectionString = "endpoint=https://acsdevwheel.communication.azure.com/;accesskey=nu9BZ1naroZDKq3mF4jy4jAtGpFGlKBSJjcIQosIkLVZRBJvfk+b1UTsoUE7UFPpgx71v13QZjJKdAVcQqAz0Q==";
+        string connectionString = "endpoint=xxxx get this from Azure";
 
         /// <summary>
         /// Create an ACS User and get a token

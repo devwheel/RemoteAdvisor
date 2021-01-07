@@ -205,10 +205,6 @@ const JoinVideo = async () => {
     const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
     const context = { groupId: groupId };
 
-    //set the users displayname
-    // let userName = getCookie("name");
-    // callAgent.updateDisplayName(userName);
-
     call = callAgent.join(context, placeCallOptions);
     document.getElementById('status-box').style.display = 'block'
     document.getElementById('participant-panel').style.display = 'block';
@@ -269,9 +265,6 @@ const processNewParticipants = (remoteParticipants) => {
     if (remoteParticipants.length === 0) return;
     for (let addedParticipant of remoteParticipants) {
         processNewVideoSteams(addedParticipant, addedParticipant.videoStreams);
-
-        //        $("#remote-name").html(addedParticipant.displayName);
-
         addedParticipant.on('videoStreamsUpdated', (rpvEvent) => {
             processNewVideoSteams(addedParticipant, rpvEvent.added);
         });
@@ -552,8 +545,6 @@ const ToggleVideo = async () => {
 
         videoSwitch.classList.remove("inactive-control");
         videoSwitch.classList.add("active-control");
-        // document.getElementById("my-cam-on").style.display = 'block';
-        // document.getElementById("my-cam-off").style.display = 'none'
         document.getElementById("my-cam-on").classList.remove("hidden");
         document.getElementById("my-cam-off").classList.add("hidden");
 
@@ -572,8 +563,6 @@ const ToggleVideo = async () => {
 
         videoSwitch.classList.remove("active-control");
         videoSwitch.classList.add("inactive-control");
-        // document.getElementById("my-cam-on").style.display = 'none';
-        // document.getElementById("my-cam-off").style.display = 'block'
         document.getElementById("my-cam-on").classList.add("hidden");
         document.getElementById("my-cam-off").classList.remove("hidden");
 
@@ -648,8 +637,6 @@ const CreateRemoteParticipantElement = (User) => {
 
 const UpdateRemoteParticipantName = (userId, name) => {
     document.getElementById("remote-name-" + userId).innerHTML = name;
-    //$(target).find(".remote-name").html(name);
-
 };
 
 const GetId = (data) => {
