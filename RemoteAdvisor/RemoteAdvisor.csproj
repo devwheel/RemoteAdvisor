@@ -194,6 +194,13 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="Images\Docs\image001.png" />
+    <Content Include="Images\Docs\image003.png" />
+    <Content Include="Images\Docs\image005.png" />
+    <Content Include="Images\Docs\image007.png" />
+    <Content Include="Images\Docs\image009.png" />
+    <Content Include="Images\Docs\image011.png" />
+    <Content Include="Images\Docs\image013.png" />
     <Content Include="Scripts\App\Cookies.js" />
     <Content Include="Scripts\App\Index.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
