@@ -34,9 +34,7 @@ I’m going to create 2 APIs for this. Below is the 2 APIs that I created for to
 <li>The first API creates the user and gets a token for that new user.</li>
 <li>The second API refreshes a token for a user that has an identity.</li>
 </ul>
-<p>
 The returned tokenResponse will have a structure like:
-</p>
 ```javascript
     {
         "Token": "[The Token]",
@@ -44,9 +42,9 @@ The returned tokenResponse will have a structure like:
         "ExpiresOn": "2021-01-08T03:40:02.5492449+00:00"
     }
     ```
-<p>
+
 You would typically map the User property to your applications identity system.
-</p>
+
 <h3>Front End Code</h3>
 <p>
 The purpose of this part is not to be super glamorous. It is intended to for you to easily follow the flows to better understand the APIs. I will also include some of my findings about utilizing the JavaScript SDK in this section.
