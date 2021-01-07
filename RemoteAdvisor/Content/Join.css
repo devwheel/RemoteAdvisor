@@ -1,0 +1,106 @@
+﻿#participants {
+    width: 200px
+}
+
+.video-card-holder {
+    text-align: center;
+}
+
+    .video-card-holder h5 {
+        text-align: left !important;
+    }
+
+.video-card {
+    height: 300px;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+.video-panel {
+    height: 280px;
+    background-color: black;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.toolbar {
+    background-color: silver;
+    height: 40px;
+    padding-top: 8px;
+    padding-left: 15px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.hidden {
+    display: none
+}
+
+.fa {
+    color: white;
+}
+
+.media-control {
+    height: 25px;
+    cursor: pointer;
+    width: 50px;
+    border-radius: 5px;
+    margin-left: 10px;
+}
+
+.active-control {
+    background-color: #007bff;
+}
+
+.inactive-control {
+    background-color: #5AAAFF
+}
+
+#status-bar {
+    height: 30px;
+    border: 1px solid black;
+    margin-bottom: 8px;
+    margin-top: 8px;
+}
+
+.status-box {
+    width: 150px;
+    margin-bottom: 5px;
+    height: 26px;
+    display: inline-block;
+    margin-right: 25px;
+}
+
+.toolbar-icon {
+    background-color: white;
+    color: #007bff !important;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.status-message {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: smaller;
+}
+
+.formal-section {
+    margin-top: 10px;
+    border: 1px solid black;
+    padding: 8px;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.matching-button {
+    height: 25px;
+    line-height: 1.0;
+    margin-left: 15px;
+}
+
+.drag-bar {
+    cursor: move
+}

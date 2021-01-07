@@ -1,0 +1,176 @@
+﻿@{
+    ViewBag.Title = "Test";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Advisor</title>
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/css/bootstrap.min.css" crossorigin="anonymous" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/js/bootstrap.min.js"></script>
+
+    <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
+    <link href="/Content/Join.css" rel="stylesheet" />
+
+</head>
+<body>
+
+    <div class="container">
+        <div id="play"></div>
+        <h4>Azure Communication Services</h4>
+        <h1>Calling Quickstart</h1>
+        <div id="call-panel" class="hidden">
+            <!-- panels for video display -->
+            <div class="row" id="remote-displays">
+                <!-- Local Video Preview-->
+                <div id="local-panel" class="col-5 formal-section video-card-holder draggable">
+                    <h5 class="drag-bar">My Video Preview</h5>
+                    <div class="video-card">
+                        <div id="video" class="video-panel"></div>
+                        <div id="video-bar" class="toolbar">
+                            <div class="form-group form-inline">
+                                <div class="media-control inactive-control text-center" id="local-video-switch" data-value="off"><i id="my-cam-off" class="fa fa-video-slash"></i><i id="my-cam-on" class="fa fa-video hidden"></i></div>
+                                <span style="width:10px"></span>
+                                <div class="media-control inactive-control text-center" id="local-microphone-switch" data-value="off"><i id="my-mic-off" class="fa fa-microphone-slash"></i><i id="my-mic-on" class="fa fa-microphone hidden"></i></div>
+                                <button id="video-button" type="button" disabled="true;" class="btn btn-sm btn-primary matching-button">Join Call</button>
+                                <button id="hang-up-button" type="button" disabled="true" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Device Selector and Remote Participant List -->
+        <div id="media-selectors" class="row">
+            <div class="col-5 formal-section">
+                <h5>Call Devices</h5>
+                <div class="col">
+                    <div id="cameras" style="display:none; margin-top: 20px;">
+                        <label labelfor="camera-list">
+                            Cameras
+                            <select id="camera-list" class="form-control">
+                            </select>
+                        </label>
+                    </div>
+
+                    <div id="mics" style="display:none; margin-top: 20px;">
+                        <label labelfor="mic-list">
+                            Microphones
+                            <select id="mic-list" class="form-control">
+                            </select>
+                        </label>
+                    </div>
+                    <div id="speakers" style="display:none; margin-top: 20px;">
+                        <label labelfor="speaker-list">
+                            Speakers
+                            <select id="speaker-list" class="form-control">
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="participant-panel" class="col-5 formal-section hidden">
+                <div id="partipant-list">
+                    <div class="col">
+                        <h5>
+                            Call Participants&nbsp;<i id="refresh-participants" style="color:blue !important; font-size:18px; display: inline; cursor: pointer;" class="fas fa-sync-alt"></i>
+                        </h5>
+                        <select id="participants" size="3" class="form-control">
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Call Status and Remote Participant Counts -->
+        <div class="row">
+            <div class="col-5 formal-section">
+                <h5>Call Status</h5>
+                <div id="status-bar1" class="col-5">
+                    <div id="status-box">
+                        <div class="status-box" title="Call Status">
+                            <span class="status-message"><i class='fas fa-phone toolbar-icon'></i></span>
+                            <div id="call-state" class="status-message">Call not joined</div>
+                        </div>
+                        <div class="status-box">
+                            <span class="status-message">
+                                <i class="fas fa-users toolbar-icon"></i>
+                            </span>
+                            <div id="call-participants" class="status-message">0 Remote Users</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Modal Dialog-->
+    <div class="modal" id="modal-login" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Fake Login Screen</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your name:</p>
+                    <input type="text" id="user-name" class="form-control" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-default" onclick="Login()">Login</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="root"></div>
+    <input type="hidden" id="login-name" />
+    <script src="~/Scripts/App/Bundle.js"></script>
+    <script>
+
+        function Login() {
+            let name = document.getElementById("user-name").value;
+            setCookie("name", name);
+            document.getElementById("call-panel").classList.remove("hidden");
+            $('#modal-login').modal('hide');
+        };
+
+
+        function setCookie(name, value, days) {
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toGMTString();
+            }
+            else {
+                expires = "";
+            }
+            document.cookie = name + "=" + value + expires + "; path=/";
+            //console.log(value);
+        }
+
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    </script>
+
+
+
+
+</body>
+</html>
