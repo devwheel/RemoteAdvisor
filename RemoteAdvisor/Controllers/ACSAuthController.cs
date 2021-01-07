@@ -16,7 +16,6 @@ namespace RemoteAdvisor.Controllers
         //Connection string to the ACS instance
         string connectionString = "[Get from Azure Portal]";
 
-
         /// <summary>
         /// Create an ACS User and get a token
         /// </summary>
