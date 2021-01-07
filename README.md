@@ -37,11 +37,13 @@ I’m going to create 2 APIs for this. Below is the 2 APIs that I created for to
 <p>
 The returned tokenResponse will have a structure like:
 </p>
+```javascript
     {
         "Token": "[The Token]",
         "User": "[the ACS User]",
         "ExpiresOn": "2021-01-08T03:40:02.5492449+00:00"
     }
+    ```
 <p>
 You would typically map the User property to your applications identity system.
 </p>
@@ -61,6 +63,7 @@ In the code block below, there are a few notables:
 </ul>
 </p>
 <p>
+```javascript
     //will assume all are new users for brevity
     //Get the ACS Auth Token
     let postObject = new Object();
@@ -91,7 +94,7 @@ In the code block below, there are a few notables:
 
         //browser consent
         await deviceManager.askDevicePermission(true, true);
-        
+```        
 
 </p>
 <h3>Joining the Call</h3>
