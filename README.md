@@ -37,11 +37,11 @@ I’m going to create 2 APIs for this. Below is the 2 APIs that I created for to
 <p>
 The returned tokenResponse will have a structure like:
 </p>
-```{
+{
 "Token": "[The Token]",
 "User": "[the ACS User]",
 "ExpiresOn": "2021-01-08T03:40:02.5492449+00:00"
-}```
+}
 <p>
 You would typically map the User property to your applications identity system.
 </p>
