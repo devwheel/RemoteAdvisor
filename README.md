@@ -62,11 +62,10 @@ In the code block below, there are a few notables:
 </p>
 <p>
     //will assume all are new users for brevity
-	//Get the ACS Auth Token
-	let postObject = new Object();
-	postObject.UserId = "";
-	postObject.UserEmail = "foo@bar.com";
-	
+    //Get the ACS Auth Token
+    let postObject = new Object();
+    postObject.UserId = "";
+    postObject.UserEmail = "foo@bar.com";
     const response = await fetch("/api/ACS/AuthGet", {
         method: "POST",
         body: JSON.stringify(postObject),
@@ -93,6 +92,7 @@ In the code block below, there are a few notables:
         //browser consent
         await deviceManager.askDevicePermission(true, true);
         
+
 </p>
 <h3>Joining the Call</h3>
 <p>
