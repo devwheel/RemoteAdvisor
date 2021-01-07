@@ -26,6 +26,8 @@ We also need to add nuget packages to support the project:
 <h3>Authentication</h3>
 <p>
 ACS allows you to create identities and manage your access tokens. The identities created do not contain any PII data so you would typically map that identity as a property of your application’s identity solution. For a real “quick start” there is a nice sample that implements this in an Azure function. We will go ahead and implement it as part of our solution so we will need a web API to do this.
+</p>
+<p>
 I’m going to create 2 APIs for this. Below is the 2 APIs that I created for token management.  
 </p>
 <ul>
@@ -35,14 +37,11 @@ I’m going to create 2 APIs for this. Below is the 2 APIs that I created for to
 <p>
 The returned tokenResponse will have a structure like:
 </p>
-```
-{
+```{
 "Token": "[The Token]",
 "User": "[the ACS User]",
 "ExpiresOn": "2021-01-08T03:40:02.5492449+00:00"
-}
-```
-</p>
+}```
 <p>
 You would typically map the User property to your applications identity system.
 </p>
