@@ -33,7 +33,7 @@ I’m going to create 2 APIs for this. Below is the 2 APIs that I created for to
 <ul>
 <li>The first API creates the user and gets a token for that new user.</li>
 <li>The second API refreshes a token for a user that has an identity.</li>
-<ul>
+</ul>
 <p>
 The returned tokenResponse will have a structure like:
 </p>
