@@ -54,6 +54,7 @@ In the code block below, there are a few notables:
 <p>
     //will assume all are new users for brevity
     //Get the ACS Auth Token
+
     let postObject = new Object();
     postObject.UserId = "";
     postObject.UserEmail = "foo@bar.com";
@@ -91,14 +92,15 @@ The code block below highlights video options:
 • The “call” object is returned from the join method, which we then can add event listeners. Note the remoteParticipantsUpdated listener. This allows us to track participants who come and go from the call
 </p>
 <p>
-const JoinVideo = async () => {
-//setup the video device to be used
-if (localVideoStream === undefined) {
-await ToggleVideo();
-}
-const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] },
-audioOptions: { muted: myMicrophoneMuted } };
-const context = { groupId: groupId };
+
+    const JoinVideo = async () => {
+    //setup the video device to be used
+    if (localVideoStream === undefined) {
+    await ToggleVideo();
+    }
+    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] },
+    audioOptions: { muted: myMicrophoneMuted } };
+    const context = { groupId: groupId };
 
     call = callAgent.join(context, placeCallOptions);
     document.getElementById('status-box').style.display = 'block'
@@ -137,38 +139,41 @@ const context = { groupId: groupId };
 
     //show local stream
     await DisplayLocalVideo();
+    };
 
-};
 </p>
 <h3>New Participant handler:</h3>
 <p>
 • When participants are added, we can hook up listeners for those participants. Note the videoStreamsUpdated listener so that we can understand if it is a screen sharing stream or a video stream (we can do both!)
 </p>
 <p>
-const processNewParticipants = (remoteParticipants) => {
-if (remoteParticipants.length === 0) return;
-for (let addedParticipant of remoteParticipants) {
-processNewVideoSteams(addedParticipant, addedParticipant.videoStreams);
-addedParticipant.on('videoStreamsUpdated', (rpvEvent) => {
-processNewVideoSteams(addedParticipant, rpvEvent.added);
-});
-addedParticipant.on("displayNameChanged", () => {
-console.log('have streamid for participant: ' + addedParticipant.videoStreams[0].id);
-ShowParticipantList();
-});
+
+    const processNewParticipants = (remoteParticipants) => {
+    if (remoteParticipants.length === 0) return;
+    for (let addedParticipant of remoteParticipants) {
+    processNewVideoSteams(addedParticipant, addedParticipant.videoStreams);
+    addedParticipant.on('videoStreamsUpdated', (rpvEvent) => {
+    processNewVideoSteams(addedParticipant, rpvEvent.added);
+    });
+    addedParticipant.on("displayNameChanged", () => {
+    console.log('have streamid for participant: ' + addedParticipant.videoStreams[0].id);
+    ShowParticipantList();
+    });
 
     }
     ShowParticipantList();
 
-};
+    };
+
 </p>
 <h3>Turning Video On and Off</h3>
 <p>
 The snippet below walks you through toggling your local video once in the call.
 </p>
 <p>
-const ToggleVideo = async () => {
-let videoSwitch = document.getElementById("local-video-switch")
+
+    const ToggleVideo = async () => {
+    let videoSwitch = document.getElementById("local-video-switch")
 
     if (myCameraMuted) {
 
@@ -202,22 +207,22 @@ let videoSwitch = document.getElementById("local-video-switch")
         myCameraMuted = true;
     }
 
-};
+    };
 
-const DisplayLocalVideo = async () => {
-if (localView === undefined) {
-if (localVideoStream === undefined) {
-localVideoStream = new LocalVideoStream(GetActiveCamera());
-}
-const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] },
-audioOptions: { muted: myMicrophoneMuted } };
-let renderer = new Renderer(localVideoStream);
-localView = await renderer.createView();
-videoElement.appendChild(localView.target);
-document.getElementById("local-video-switch").setAttribute("data-value", "on");
-return localVideoStream;
-}
-};
+    const DisplayLocalVideo = async () => {
+    if (localView === undefined) {
+    if (localVideoStream === undefined) {
+        localVideoStream = new LocalVideoStream(GetActiveCamera());
+    }
+    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] },
+    audioOptions: { muted: myMicrophoneMuted } };
+    let renderer = new Renderer(localVideoStream);
+    localView = await renderer.createView();
+    videoElement.appendChild(localView.target);
+    document.getElementById("local-video-switch").setAttribute("data-value", "on");
+    return localVideoStream;
+    }
+    };
 </p>
 <h2>Bundling</h2>
 <p>
@@ -250,27 +255,29 @@ At this point we should have the ACS SDK and the Webpack tooling installed into 
 </p>
 <p>
 Package.json
-{
-"name": "remoteadvisor",
-"version": "1.0.0",
-"description": "",
-"main": "webpack.config.js",
-"scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1" },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-    "@azure/communication-calling": "^1.0.0-beta.3",
-    "@azure/communication-common": "^1.0.0-beta.3"
-},
-    "devDependencies": {
-    "webpack": "^4.32.2",
-    "webpack-cli": "^3.3.2",
-    "webpack-dev-server": "^3.5.1"
-    }
-}
 </p>
+
+    {
+        "name": "remoteadvisor",
+        "version": "1.0.0",
+        "description": "",
+        "main": "webpack.config.js",
+        "scripts": {
+            "test": "echo \"Error: no test specified\" && exit 1" },
+            "keywords": [],
+            "author": "",
+            "license": "ISC",
+            "dependencies": {
+            "@azure/communication-calling": "^1.0.0-beta.3",
+            "@azure/communication-common": "^1.0.0-beta.3"
+        },
+        "devDependencies": {
+        "webpack": "^4.32.2",
+        "webpack-cli": "^3.3.2",
+        "webpack-dev-server": "^3.5.1"
+        }
+    }
+
 <p>
 Create a webpack.config.js file in your project root. This is where we configure our bundling.
 </p>
@@ -278,16 +285,18 @@ Create a webpack.config.js file in your project root. This is where we configure
 I have modified my webpack.config.js to read:  
 </p>
 <p>
-const path = require('path');
-module.exports = {
-entry: './Scripts/App/Index.js',
-output: {
-path: path.resolve(\_\_dirname, 'Scripts/App'),
-filename: 'Bundle.js'
-},
-optimization: { minimize: false },
-mode: 'none'
-};
+
+    const path = require('path');
+    module.exports = {
+    entry: './Scripts/App/Index.js',
+    output: {
+    path: path.resolve(\_\_dirname, 'Scripts/App'),
+        filename: 'Bundle.js'
+        },
+    optimization: { minimize: false },
+    mode: 'none'
+    };
+
 </p>
 <p>
 My code for the video is in the “entry” setting (Index.js). The output bundle will be in the Bundle.js file. You should now be ready to create your first bundle.  
@@ -300,5 +309,7 @@ Dropping to a command prompt every time you make a change to your index.js file 
 
 Setting this up will create the bundle before each build.  
 </p>
-Summary
+<h2>Summary</h2>
+<p>
 I know there is a lot of information in this article, and probably a few inaccuracies but the goal was to highlight the ability to add video calling to an application and get the SDK working in a ASP.Net Web Application. I have also put the code that I used in this example in a Github Repo.
+</p>
