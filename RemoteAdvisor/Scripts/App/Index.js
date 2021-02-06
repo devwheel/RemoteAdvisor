@@ -32,7 +32,7 @@ const localVideoSwitch = document.getElementById("local-video-switch");
 const localMicrophoneSwitch = document.getElementById("local-microphone-switch");
 
 
-const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2624';
+const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2777';
 
 document.addEventListener('DOMContentLoaded', startup);
 
