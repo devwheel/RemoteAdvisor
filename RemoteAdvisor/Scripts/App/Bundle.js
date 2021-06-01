@@ -529,7 +529,7 @@ const SetupListeners = () => {
             myMicrophoneMuted = true;
             if (call !== undefined) {
                 console.log("mute call");
-                call.Mute();
+                call.mute();
             }
 
         }

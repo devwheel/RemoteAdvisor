@@ -381,8 +381,8 @@ const SetupListeners = () => {
 
         //let remotePannel =  document.querySelector("remote-panel");
         let remotePannel = document.querySelector("#remote-displays .remote-panel")
-        if (remotePannel === null) { }
-        else {
+        if (remotePannel !== null) 
+        {
             remotePannel.remove();
         }
         // $("#remote-displays").find($(".remote-panel")).remove();
@@ -429,7 +429,7 @@ const SetupListeners = () => {
             myMicrophoneMuted = true;
             if (call !== undefined) {
                 console.log("mute call");
-                call.Mute();
+                call.mute();
             }
 
         }

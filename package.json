@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/devwheel/RemoteAdvisor/issues"
   },
-  "homepage": "https://github.com/devwheel/RemoteAdvisor#readme"
+  "homepage": "https://github.com/devwheel/RemoteAdvisor#readme",
+  "dependencies": {
+    "@azure/communication-calling": "^1.0.0",
+    "@azure/communication-common": "^1.0.0"
+  }
 }
