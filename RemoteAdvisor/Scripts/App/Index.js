@@ -103,7 +103,8 @@ const JoinVideo = async () => {
         await ToggleVideo();
     }
     const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
-    const context = { groupId: groupId };
+    const context = { meetingLink: groupId };
+
 
     call = callAgent.join(context, placeCallOptions);
     document.getElementById('status-box').style.display = 'block'

@@ -1,6 +1,5 @@
 ﻿using Azure.Communication;
-using Azure.Communication.Administration;
-using Azure.Communication.Administration.Models;
+using Azure.Communication.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +29,7 @@ namespace RemoteAdvisor.Controllers
                 var client = new CommunicationIdentityClient(connectionString);
                 var identityResponse = await client.CreateUserAsync();
                 var identity = identityResponse.Value;
-                var tokenResponse = await client.IssueTokenAsync(identity, scopes: new[] { CommunicationTokenScope.VoIP });
+                var tokenResponse = await client.GetTokenAsync(identity, scopes: new[] { CommunicationTokenScope.VoIP });
                 return Ok(tokenResponse.Value);
             }
             catch (Exception ex)
@@ -49,8 +48,8 @@ namespace RemoteAdvisor.Controllers
         public async Task<IHttpActionResult> ACSRefreshAsync(TokenRequest request)
         {
             var client = new CommunicationIdentityClient(connectionString);
-            var identitytoRefresh = new CommunicationUser(request.UserEmail);
-            var tokenResponse = await client.IssueTokenAsync(identitytoRefresh, scopes: new[] { CommunicationTokenScope.VoIP });
+            var identitytoRefresh = new CommunicationUserIdentifier(request.UserEmail);
+            var tokenResponse = await client.GetTokenAsync(identitytoRefresh, scopes: new[] { CommunicationTokenScope.VoIP });
             return Ok(tokenResponse.Value);
         }
 
@@ -61,7 +60,8 @@ namespace RemoteAdvisor.Controllers
             var client = new CommunicationIdentityClient(connectionString);
             var identityResponse = await client.CreateUserAsync();
             var identity = identityResponse.Value;
-            var tokenResponse = await client.IssueTokenAsync(identity, scopes: new[] { CommunicationTokenScope.VoIP });
+            var tokenResponse = await client.GetTokenAsync
+                (identity, scopes: new[] { CommunicationTokenScope.VoIP });
             return Ok(tokenResponse.Value);
         }
 

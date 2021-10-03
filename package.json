@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/devwheel/RemoteAdvisor#readme",
   "dependencies": {
-    "@azure/communication-calling": "^1.0.0",
-    "@azure/communication-common": "^1.0.0"
+    "@azure/communication-calling": "^1.1.0",
+    "@azure/communication-common": "^1.1.0"
   }
 }
