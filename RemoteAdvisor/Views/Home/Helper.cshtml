@@ -1,0 +1,77 @@
+﻿@{
+    ViewBag.Title = "Token Helper";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token Helper</title>
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/css/bootstrap.min.css" crossorigin="anonymous" rel="stylesheet">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/js/bootstrap.min.js"></script>
+
+    <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
+    <link href="/Content/Join.css" rel="stylesheet" />
+    <style>
+        .info {min-height:200px; border:1px solid gray;padding:5px;border-radius:5px;overflow:visible}
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="play"></div>
+        <h4>Azure Communication Services</h4>
+        <h3>Account</h3>
+        <label id="account" class="form-control"></label>
+        <h3>Token</h3>
+        <div>
+            <textarea id="token" class="text-wrap info" style="width:100%"></textarea>
+        </div>
+        <h3>Expires</h3>
+        <label id="expires" class="form-control"></label>
+        <button class="btn btn-primary mt-4" onclick="getInfo()">Get Account and Token</button>
+    </div>
+    <div id="root"></div>
+   
+    <script>
+        function getInfo() {
+            let request = new Object();
+            let acsUser = new Object();
+            acsUser.AcsUserId = '';
+            acsUser.Name = '';
+            acsUser.Email = '';
+            request.User = acsUser;
+            request.TokenExpires = '';
+            request.Token = '';
+            $.ajax({
+                type: "POST",
+                url: "/api/acs/authget",
+                data: JSON.stringify(request),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    console.log(result);
+                    $("#token").val(result.Token);
+                    console.log(result.AcsUser.AcsUserId.Id)
+                    $("#account").html(result.AcsUser.AcsUserId.Id);
+                    $("#expires").html(result.TokenExpires);
+                },
+                error: function (xhr, status, p3, p4) {
+                    var err = "Error " + " " + status + " " + p3 + " " + p4;
+                    if (xhr.responseText && xhr.responseText[0] === "{")
+                        err = JSON.parse(xhr.responseText).Message;
+                    alert(err);
+                }
+            });
+        }
+ 
+    </script>
+
+</body>
+</html>

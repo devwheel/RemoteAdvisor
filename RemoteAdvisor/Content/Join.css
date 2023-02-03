@@ -11,28 +11,35 @@
     }
 
 .video-card {
-    height: 300px;
+    min-height: 200px;
     width: 100%;
-    max-width: 400px;
+    max-width: 320px;
     margin-bottom: 20px;
     margin-right: 10px;
     display: inline-block;
 }
 
 .video-panel {
-    height: 280px;
+    height: 180px;
+
     background-color: black;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+    overflow:hidden;
 }
 
 .toolbar {
     background-color: silver;
-    height: 40px;
-    padding-top: 8px;
-    padding-left: 15px;
+    min-height: 33px;
+    padding: 4px 8px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
+}
+.toolbar-icon {
+    background-color: white;
+    color: #007bff !important;
+    font-size: 14px;
+    margin-right: 8px;
 }
 
 .hidden {
@@ -74,12 +81,6 @@
     margin-right: 25px;
 }
 
-.toolbar-icon {
-    background-color: white;
-    color: #007bff !important;
-    font-size: 14px;
-    margin-right: 8px;
-}
 
 .status-message {
     display: inline-block;
@@ -93,6 +94,7 @@
     padding: 8px;
     border-radius: 5px;
     margin-right: 10px;
+    max-width:350px;
 }
 
 .matching-button {

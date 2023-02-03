@@ -1,5 +1,6 @@
 ﻿using Azure.Communication;
 using Azure.Communication.Identity;
+using RemoteAdvisor.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace RemoteAdvisor.Controllers
     public class ACSAuthController : ApiController
     {
         //Connection string to the ACS instance
-        string connectionString = "[Get from Azure Portal]";
+        string connectionString = System.Configuration.ConfigurationManager.AppSettings["ACS.ConnectionString"];
 
         /// <summary>
         /// Create an ACS User and get a token
@@ -27,10 +28,22 @@ namespace RemoteAdvisor.Controllers
             try
             {
                 var client = new CommunicationIdentityClient(connectionString);
-                var identityResponse = await client.CreateUserAsync();
-                var identity = identityResponse.Value;
+                string token = string.Empty;
+                CommunicationUserIdentifier identity = null;
+                DateTimeOffset expires = DateTime.UtcNow;
+               // if (request.User.AcsUserId == null)
+               // {
+                    var identityResponse = await client.CreateUserAsync();
+                    request.User.AcsUserId = identityResponse.Value;
+                    identity = identityResponse.Value;
+               // }
+                //check for token expiration
                 var tokenResponse = await client.GetTokenAsync(identity, scopes: new[] { CommunicationTokenScope.VoIP });
-                return Ok(tokenResponse.Value);
+                    token = tokenResponse.Value.Token.ToString();
+                    expires = tokenResponse.Value.ExpiresOn;
+                
+                TokenRequestResponse response = new TokenRequestResponse() { AcsUser = request.User, Token = token, TokenExpires = expires };
+                return Ok(response);
             }
             catch (Exception ex)
             {
@@ -48,7 +61,7 @@ namespace RemoteAdvisor.Controllers
         public async Task<IHttpActionResult> ACSRefreshAsync(TokenRequest request)
         {
             var client = new CommunicationIdentityClient(connectionString);
-            var identitytoRefresh = new CommunicationUserIdentifier(request.UserEmail);
+            var identitytoRefresh = new CommunicationUserIdentifier(request.User.Email);
             var tokenResponse = await client.GetTokenAsync(identitytoRefresh, scopes: new[] { CommunicationTokenScope.VoIP });
             return Ok(tokenResponse.Value);
         }
@@ -62,7 +75,7 @@ namespace RemoteAdvisor.Controllers
             var identity = identityResponse.Value;
             var tokenResponse = await client.GetTokenAsync
                 (identity, scopes: new[] { CommunicationTokenScope.VoIP });
-            return Ok(tokenResponse.Value);
+            return Ok(tokenResponse.Value.Token);
         }
 
     }
@@ -70,8 +83,9 @@ namespace RemoteAdvisor.Controllers
     //generic class for requesting a new token or refreshing one
     public class TokenRequest
     {
-        public string UserId { get; set; } = "";
-        public string UserEmail { get; set; } = "";
+        public ACSUser User { get; set; } = new ACSUser();
+        public string Token { get; set; }
+        public DateTimeOffset TokenExpires { get; set; }
     }
 }
 

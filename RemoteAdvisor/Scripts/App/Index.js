@@ -1,6 +1,6 @@
-﻿import { CallClient, CallAgent, LocalVideoStream, Call, AudioDeviceInfo, VideoDeviceInfo, RemoteParticipant, Renderer } from "@azure/communication-calling";
-import { AzureCommunicationUserCredential, getIdentifierKind } from '@azure/communication-common';
-import {getCookie, setCookie} from './Cookies.js'
+﻿import { CallClient, CallAgent, LocalVideoStream, Call, AudioDeviceInfo, VideoDeviceInfo, RemoteParticipant, VideoStreamRenderer } from "@azure/communication-calling";
+import { AzureCommunicationTokenCredential } from '@azure/communication-common';
+import { getCookie, setCookie } from './Cookies.js'
 
 let callClient;
 let deviceManager;
@@ -13,16 +13,26 @@ let localView;
 
 let myCameraMuted = true;
 let myMicrophoneMuted = true;
+let cameras;
+let activeCamera;
+let rendererLocal;
+let rendererRemote;
+let microphones;
+let speakers;
 
 let lastCamera = 0;
 let lastMicrophone = 0;
 let lastSpeaker = 0;
 
-
 const hangUpButton = document.getElementById("hang-up-button");
-const vidButton = document.getElementById("video-button");
+const joinButton = document.getElementById("video-button");
 const videoElement = document.getElementById("video");
 const refreshElement = document.getElementById("refresh-participants");
+const loginButton = document.getElementById("btnLogin");
+const consoleOut = document.getElementById("console-out");
+const remoteDisplay = document.getElementById("remote-displays");
+const participantCount = document.getElementById("call-participants");
+const callState = document.getElementById("call-state");
 
 const cameraDropdown = document.getElementById("camera-list");
 const microphoneDropdown = document.getElementById("mic-list");
@@ -32,9 +42,11 @@ const localVideoSwitch = document.getElementById("local-video-switch");
 const localMicrophoneSwitch = document.getElementById("local-microphone-switch");
 
 
-const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2777';
+const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2779';
 
 document.addEventListener('DOMContentLoaded', startup);
+
+loginButton.addEventListener("click", async () => LoginOK(), false);  //Login
 
 async function startup() {
 
@@ -42,153 +54,136 @@ async function startup() {
         $('#user-name').trigger('focus')
     })
 
-    let name = getCookie("name");
-    if (name === null) {
+    let name = GetUserName();
+    console.log("name: " + name)
+    let id = GetUserId();
+    let email = GetUserEmail();
+
+    if (name === null || name === '') {
         $('#modal-login').modal('show');
+        return;
     } else {
-        $("#login-name").val(name);
+
         $("#call-panel").removeClass("hidden");
     }
-
-
-    LoadSettings();
-    //will assume all are new users for brevity
-    //Get the ACS Auth Token
-    let postObject = new Object();
-    postObject.UserId = "";
-    postObject.UserEmail = "foo@bar.com";
-    
-    const response = await fetch("/api/ACS/AuthGet", {
-        method: "POST",
-        body: JSON.stringify(postObject),
-        headers: { "Content-Type": "application/json; charset=utf-8" }
-    });
-    const result = response.json();
-
-    result.then(async (tokenResponse) => {
-
-        var token = tokenResponse.Token;
-
-        callClient = new CallClient();
-
-        let tokenCredential = new AzureCommunicationUserCredential(token);
-
-        callAgent = await callClient.createCallAgent(tokenCredential, { displayName: getCookie("name") });
-
-        vidButton.disabled = false;
-
-        deviceManager = await callClient.getDeviceManager();
-
-        LoadDeviceDropdowns(deviceManager);
-
-        //browser consent
-        await deviceManager.askDevicePermission(true, true);
-
-        document.getElementById('local-panel').style.display = 'block';
-        document.getElementById('partipant-list').style.display = 'block';
-        document.getElementById('media-selectors').style.display = 'block';;
-
-    }).catch(error => {
-
-        alert("Error creating meeting : " + error.responseText);
-    });
+    $("#userid").val(getCookie("acsuserid"));
+    $("#email").val(getCookie("email"));
+    $("#login-name").val(name);
+    $("#token").val(getCookie("token"));
+    $("#token-expires").val(getCookie("expires"));
+    let tokenResponse = await GetToken();
+    console.log(tokenResponse);
+    await Init(tokenResponse.Token);
 
 }
 
-const JoinVideo = async () => {
-    //setup the video device to be used
+async function LoginOK() {
+    $('#modal-login').modal('hide');
+    setCookie("name", $("#user-name").val());
+    let tokenResponse = await GetToken();
+    await Init(tokenResponse.Token);
+
+}
+
+async function GetToken() {
+    //will assume all are new users for brevity
+    //Get the ACS Auth Token
+    //Setup the Request object
+    let tokenResponse;
+    let token;
+    let request = new Object();
+    let acsUser = new Object();
+    let result;
+    acsUser.AcsUserId = GetUserId();
+    acsUser.Name = GetUserName();
+    acsUser.Email = GetUserEmail();
+    request.User = acsUser;
+    request.TokenExpires = getCookie("expires");
+    request.Token = getCookie("token");
+    const response = await fetch("/api/ACS/AuthGet", {
+        method: "POST",
+        body: JSON.stringify(request),
+        headers: { "Content-Type": "application/json; charset=utf-8" }
+    }).then((result) => result.json())
+        .then((data) => tokenResponse = data)
+    setCookie("acsuserid", tokenResponse.AcsUser.AcsUserId.Id);
+    setCookie("email", tokenResponse.AcsUser.Email);
+    setCookie("name", tokenResponse.AcsUser.Name);
+    setCookie("token", tokenResponse.Token);
+    setCookie("expires", tokenResponse.TokenExpires);
+    return tokenResponse;
+}
+
+//********************************************************************* */
+//  Initialize the Call Client and the Call Agent for the Users
+//********************************************************************* */
+async function Init(token) {
+
+    LoadCookieSettings(); //Settings for last used devices
+
+    //Create callClient and callAgent
+    callClient = new CallClient();
+    let tokenCredential = new AzureCommunicationTokenCredential(token);
+    let displayName = getCookie("name");
+    console.log("creating call agent for " + displayName);
+    callAgent = await callClient.createCallAgent(tokenCredential, { displayName: displayName });
+
+    //Get the device manager
+    deviceManager = await callClient.getDeviceManager();
+
+    //Browser consent
+    await deviceManager.askDevicePermission({ video: true, audio: true });
+
+    //Load Device Dropdowns with Devices
+    await LoadDeviceDropdowns(deviceManager);
+
+    //Set UX Elements to Show
+    document.getElementById('local-panel').style.display = 'block';
+    document.getElementById('partipant-list').style.display = 'block';
+    document.getElementById('media-selectors').style.display = 'block';
+    joinButton.disabled = false;
+
+}
+
+//********************************************************************* */
+//  Join the Meeting with Video
+//********************************************************************* */
+async function JoinVideo() {
+    // Turn on Video if it is not there
     if (localVideoStream === undefined) {
-        //localVideoStream = new LocalVideoStream(GetActiveCamera());
-        //myCameraMuted = true;
-        await ToggleVideo();
+        localVideoStream = new LocalVideoStream(GetActiveCamera());
+        myCameraMuted = true;
+        await ToggleVideo(); //need to fix
     }
     const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
-    const context = { meetingLink: groupId };
+    const context = { groupId: groupId };   //context of the call Group/Teams/Room/etc
 
-
+    //Setup the call/meeting
     call = callAgent.join(context, placeCallOptions);
-    document.getElementById('status-box').style.display = 'block'
-    document.getElementById('participant-panel').style.display = 'block';
-    ShowCallState();
+    console.log("call", call);
+    // Configure all the call events/callbacks
+    await subscribeToCall(call);
 
+    document.getElementById('call-info').style.display = 'block'
+    ShowCallState(call);  //Connecting..=> connected
+
+    //UX Settings for a connected call
     hangUpButton.disabled = false;
-    document.getElementById('hang-up-button').style.display = 'block';
-    vidButton.disabled = true;
-
-    //call on state changed
-    call.on('callStateChanged', (e) => {
-        ShowCallState();
-        if (call.state === 'Connected') {
-            processNewParticipants(call.remoteParticipants);
-        }
-    });
-
-    //remote participants check
-    call.on("remoteParticipantsUpdated", (e) => {
-        processNewParticipants(e.added);
-        if (e.removed.length > 0) {
-            console.log("hung up " + e.removed[0].displayName);
-            //look for the remote
-            e.removed.forEach((remoteParticipant) => {
-                let removodedId = "remote-" + GetId(remoteParticipant.identifier.communicationUserId);
-                console.log('Removing Id:  ' + removodedId);
-                // $("#remote-displays").find($("#" + removodedId)).remove();
-                document.querySelector("#remote-displays #" + removodedId).remove();
-            });
-        }
-
-
-        document.getElementById("call-participants").innerText = call.remoteParticipants.length
-    });
-
-    //show local stream  
-    await DisplayLocalVideo();
+    hangUpButton.style.display = 'block';
+    joinButton.disabled = false;
 };
 
-const processNewVideoSteams = (participant, newStreams) => {
-    console.log(newStreams);
-    if (!newStreams || newStreams.length === 0) {
-        return;
-    }
-    for (let addedStream of newStreams) {
-        if (addedStream.type !== 'Video') {
-            return;
-        }
-        if (addedStream.isAvailable) {
-            CreateRemoteParticipantElement(participant);
-            DisplayRemoteVideo(participant, addedStream);
-            return;
-        }
-    }
-};
-
-const processNewParticipants = (remoteParticipants) => {
-    if (remoteParticipants.length === 0) return;
-    for (let addedParticipant of remoteParticipants) {
-        processNewVideoSteams(addedParticipant, addedParticipant.videoStreams);
-        addedParticipant.on('videoStreamsUpdated', (rpvEvent) => {
-            processNewVideoSteams(addedParticipant, rpvEvent.added);
-        });
-        addedParticipant.on("displayNameChanged", () => {
-            console.log('have streamid for participant: ' + addedParticipant.videoStreams[0].id);
-            ShowParticipantList();
-        });
-
-    }
-    ShowParticipantList();
-};
-
-const LoadDeviceDropdowns = (deviceMgr) => {
+async function LoadDeviceDropdowns(deviceMgr) {
     //get all the camera devices
-    let cameraList = deviceMgr.getCameraList();
+    cameras = await deviceMgr.getCameras();
     //add the cameras to the dropdown list
     let cameraSelector = document.getElementById('camera-list');
     let i = 0;
-    cameraList.forEach(camera => {
+    cameras.forEach(camera => {
         let option = document.createElement('option');
         option.value = camera.id;
         option.innerHTML = camera.name;
-        if (i === lastCamera) {
+        if (camera.id === lastCamera) {
             option.selected = true;
         }
         cameraSelector.appendChild(option);
@@ -200,11 +195,11 @@ const LoadDeviceDropdowns = (deviceMgr) => {
     document.getElementById('cameras').style.display = 'block';
 
     //get all the mics
-    let micList = deviceMgr.getMicrophoneList();
+    microphones = await deviceMgr.getMicrophones();
     //add the mics to the dropdown list
     let micSelector = document.getElementById('mic-list');
     i = 0;
-    micList.forEach(mic => {
+    microphones.forEach(mic => {
         let option = document.createElement('option');
         option.value = mic.id;
         option.innerHTML = mic.name;
@@ -218,15 +213,12 @@ const LoadDeviceDropdowns = (deviceMgr) => {
     document.getElementById('mics').style.display = 'block';
 
     //get all the speakers
-    let speakerList = deviceMgr.getSpeakerList();
+    speakers = await deviceMgr.getSpeakers();
     //add the mics to the dropdown list
     let speakerSelector = document.getElementById("speaker-list");
     i = 0;
-    console.log("last speaker: " + lastSpeaker);
-    speakerList.forEach((speaker) => {
-
+    speakers.forEach((speaker) => {
         let option = document.createElement('option');
-
         option.value = speaker.id;
         option.innerHTML = speaker.name;
         if (i === lastSpeaker) {
@@ -244,7 +236,7 @@ const LoadDeviceDropdowns = (deviceMgr) => {
 
 };
 
-const ShowParticipantList = () => {
+function ShowParticipantList() {
 
     let partElement = document.getElementById('participants');
     //remove all the participants
@@ -268,7 +260,7 @@ const ShowParticipantList = () => {
         part.videoStreams.forEach((stream) => {
             if (stream.type === 'Video') {
                 UpdateRemoteParticipantName(GetId(part.identifier.communicationUserId), part.displayName);
-                console.log(part.identifier);
+                console.log("video part identifier:", part.identifier);
             }
         });
 
@@ -281,41 +273,43 @@ const ShowParticipantList = () => {
 
 };
 
-async function DisplayRemoteVideo(User, stream) {
-    let id = GetId(User.identifier.communicationUserId);
-    let targetElement = User.identifier.communicationUserId;
-    let renderer = new Renderer(stream);
-    var view = await renderer.createView();
+async function DisplayRemoteVideo(id, stream) {
+    LogConsole("Trying to display Remote Video");
+    let renderer = new VideoStreamRenderer(stream);
+    let view = await renderer.createView();
     //FIX THIS as the doc manipution seems to break the video
     document.getElementById(id).appendChild(view.target);
 }
 
-const DisplayLocalVideo = async () => {
+async function DisplayLocalVideo() {
     if (localView === undefined) {
         if (localVideoStream === undefined) {
-            localVideoStream = new LocalVideoStream(GetActiveCamera());
+            activeCamera = await GetActiveCamera();
+            localVideoStream = new LocalVideoStream(activeCamera);
         }
-        const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
-        let renderer = new Renderer(localVideoStream);
+        let renderer = new VideoStreamRenderer(localVideoStream);
         localView = await renderer.createView();
+        console.log("localView", localView);
         videoElement.appendChild(localView.target);
         document.getElementById("local-video-switch").setAttribute("data-value", "on");
         return localVideoStream;
     }
 };
 
-const GetActiveCamera = () => {
+async function GetActiveCamera() {
     let list = document.getElementById("camera-list");
-    let cameraIndex = list.selectedIndex;
-    const videoDeviceInfo = deviceManager.getCameraList()[cameraIndex];
-    return videoDeviceInfo;
+    let cameraId = list.value;
+
+    let cameras = await deviceManager.getCameras();
+    let camera = cameras.filter(cam => cam.id == cameraId)[0];
+    return camera;
 };
 
-const LoadSettings = () => {
+function LoadCookieSettings() {
     //see if a different camera was set
     let cameraCheck = getCookie("camera");
     if (cameraCheck !== null) {
-        lastCamera = parseInt(cameraCheck);
+        lastCamera = cameraCheck;
     }
     //see if a different mic was set
     let microphoneCheck = getCookie("microphone");
@@ -330,14 +324,13 @@ const LoadSettings = () => {
 
 };
 
-const SetupListeners = () => {
+function SetupListeners() {
 
     //join video
-    vidButton.addEventListener("click", async () => JoinVideo(), false);
+    joinButton.addEventListener("click", async () => JoinVideo(), false);
 
     //refresh participants
     refreshElement.addEventListener("click", () => {
-        console.log('remote participants');
         if (call !== undefined) {
             ShowParticipantList();
         } else {
@@ -347,9 +340,9 @@ const SetupListeners = () => {
 
     //change camera
     cameraDropdown.addEventListener("change", async () => {
-        let cameraIndex = document.getElementById("camera-list").selectedIndex;
-        setCookie("camera", cameraIndex);
-        const camDeviceInfo = deviceManager.getCameraList()[cameraIndex];
+        let cameraId = document.getElementById("camera-list").value;
+        setCookie("camera", cameraId);
+        let camDeviceInfo = cameras.filter(cam => cam.id == cameraId)[0];
         if (localVideoStream !== undefined) {
             localVideoStream.switchSource(camDeviceInfo);
         }
@@ -358,18 +351,18 @@ const SetupListeners = () => {
     //change microphone
     microphoneDropdown.addEventListener("change", async () => {
         let micIndex = document.getElementById("mic-list").selectedIndex;
-        const micDeviceInfo = deviceManager.getMicrophoneList()[micIndex];
+        let micDeviceInfo = microphones[micIndex];
         setCookie("microphone", micIndex);
-        deviceManager.setMicrophone(micDeviceInfo);
+        await deviceManager.selectMicrophone(micDeviceInfo);
 
     });
 
     //change speaker
     speakerDropdown.addEventListener("change", async () => {
         let speakerIndex = document.getElementById("speaker-list").selectedIndex;
-        const speakerDeviceInfo = deviceManager.getMicrophoneList()[speakerIndex];
+        let speakerDeviceInfo = speakers[speakerIndex];
         setCookie("speaker", speakerIndex);
-        deviceManager.setMicrophone(speakerDeviceInfo);
+        await deviceManager.selectMicrophone(speakerDeviceInfo);
     });
 
     //hangup the call
@@ -382,8 +375,7 @@ const SetupListeners = () => {
 
         //let remotePannel =  document.querySelector("remote-panel");
         let remotePannel = document.querySelector("#remote-displays .remote-panel")
-        if (remotePannel !== null) 
-        {
+        if (remotePannel !== null) {
             remotePannel.remove();
         }
         // $("#remote-displays").find($(".remote-panel")).remove();
@@ -393,7 +385,7 @@ const SetupListeners = () => {
         hangUpButton.disabled = true;
         document.getElementById("hang-up-button").style.display = 'none';
 
-        vidButton.disabled = false;
+        joinButton.disabled = true;
     });
 
     //toggle local video
@@ -439,83 +431,92 @@ const SetupListeners = () => {
 
 };
 
-const ToggleVideo = async () => {
+async function ToggleVideo() {
     let videoSwitch = document.getElementById("local-video-switch")
-
+    console.log('starting video toggle');
     if (myCameraMuted) {
-
+        //Turn on Video
         videoSwitch.classList.remove("inactive-control");
         videoSwitch.classList.add("active-control");
         document.getElementById("my-cam-on").classList.remove("hidden");
         document.getElementById("my-cam-off").classList.add("hidden");
 
         if (localVideoStream === undefined) {
-            await DisplayLocalVideo();
+            localVideoStream = await DisplayLocalVideo();
         }
         else {
+            console.log("loca video stream exists, appending to local video element: ", localVideoStream)
             videoElement.appendChild(localView.target);
         }
 
         if (call !== undefined) {
+            console.log("starting video on call", call);
             await call.startVideo(localVideoStream);
         }
         myCameraMuted = false;
     } else {
+        //turn off video
 
+        try {
+            if (call !== undefined) {
+                console.log("stopping video on call", call);
+                await call.stopVideo(localVideoStream);
+
+            }
+        } catch (e) {
+            console.log("toggle off error" + e);
+        }
         videoSwitch.classList.remove("active-control");
         videoSwitch.classList.add("inactive-control");
         document.getElementById("my-cam-on").classList.add("hidden");
         document.getElementById("my-cam-off").classList.remove("hidden");
-
-        if (call !== undefined) {
-            await call.stopVideo(localVideoStream);
-        }
-        videoElement.removeChild(localView.target);
         myCameraMuted = true;
+        if (localView.target != null) {
+            videoElement.removeChild(localView.target);
+        }
+
     }
 };
 
-const ShowCallState = (e) => {
+function ShowCallState(e) {
     //  let icon = "<i class='fas fa-phone-alt'></i>";
     //might do something here later
-    switch (e) {
-        case 'None':
-            break;
-        case 'Incoming':
-            break;
-        case 'Connecting':
-            break;
-        case 'Ringing':
-            break;
-        case 'Connected':
-            break;
-        case 'Hold':
-            break;
-        case 'InLobby':
-            break;
-        case 'Disconnecting':
-            break;
-        case 'Disconnected':
-            break;
-        case 'EarlyMedia':
-            break;
-        default:
-            break;
+    if (e.state !== undefined) {
+        switch (e.state) {
+            case 'None':
+                break;
+            case 'Incoming':
+                break;
+            case 'Connecting':
+                break;
+            case 'Ringing':
+                break;
+            case 'Connected':
+                break;
+            case 'Hold':
+                break;
+            case 'InLobby':
+                break;
+            case 'Disconnecting':
+                break;
+            case 'Disconnected':
+                break;
+            case 'EarlyMedia':
+                break;
+            default:
+                break;
+        }
+        document.getElementById("call-state").innerText = call.state;
     }
-    document.getElementById("call-state").innerText = call.state;
 };
 
-const CreateRemoteParticipantElement = (User) => {
-    let id = GetId(User.identifier.communicationUserId);
-
+async function CreateRemoteParticipantElement(id, userName) {
+    console.log("creating remote box for " + userName);
     let remoteElement = document.getElementById("remote-" + id);
     if (remoteElement !== null) {
         return;
     }
-    console.log(remoteElement);
 
-    let userName = User.displayName;
-    //    let newElement = '<div id="remote-' + id + '" class="col-5 formal-section video-card-holder remote-panel"><h5 class="drag-bar">Remote Participant Video</h5><div  class="video-card"><div id="' + id + '" class="video-panel"></div><div id="remote-video-bar" class="toolbar"><div id="remote-name-' + id + '" class="form-group form-inline">' + userName + '</div></div></div>';
     let newElement = '<h5 class="drag-bar">Remote Participant Video</h5><div  class="video-card"><div id="' + id + '" class="video-panel"></div><div id="remote-video-bar" class="toolbar"><div id="remote-name-' + id + '" class="form-group form-inline">' + userName + '</div></div>';
 
     let remoteDisplays = document.getElementById('remote-displays');
@@ -527,23 +528,186 @@ const CreateRemoteParticipantElement = (User) => {
     remoteEl.classList.add("remote-panel");
     remoteEl.innerHTML = newElement;
     remoteDisplays.append(remoteEl);
-
-    //remoteDisplays.innerHTML = remoteDisplays.innerHTML + newElement;
-
-    //$("#remote-displays").append(newElement);
-
-    // $("#remote-" + id).draggable({stack:"div"});
     return id;
 };
 
-const UpdateRemoteParticipantName = (userId, name) => {
+function UpdateRemoteParticipantName(userId, name) {
     document.getElementById("remote-name-" + userId).innerHTML = name;
 };
 
-const GetId = (data) => {
+function GetUserId() {
+    let user = getCookie("acsuserid");
+    return user;
+}
+function GetUserName() {
+    let user = getCookie("name");
+    return user;
+}
+function GetUserEmail() {
+    let email = getCookie("email");
+    if (email == null) {
+        email = "user@foo.bar";
+    }
+    return email;
+}
+function GetId(data) {
     let array = data.split(':');
     let len = array.length;
     return array[len - 1];
 };
+async function Login() {
+    let name = document.getElementById("user-name").value;
+    setCookie("name", name);
+    document.getElementById("call-panel").classList.remove("hidden");
+    $('#modal-login').modal('hide');
+    await Init();
+};
 
+// Subscribe to a call obj.
+// Listen for property changes and collection updates.
+async function subscribeToCall(call) {
+    try {
+        // Inspect the initial call.id value.
+        LogConsole(`Subscribing to Call: ${call.id}`);
+        //Subscribe to call's 'idChanged' event for value changes.
+        call.on('idChanged', () => {
+            LogConsole(`Call Id changed: ${call.id}`);
+        });
+
+        // Inspect the initial call.state value.
+        LogConsole(`Call state: ${call.state}`);
+        // Subscribe to call's 'stateChanged' event for value changes.
+        call.on('stateChanged', async () => {
+            ShowCallState(call);
+            LogConsole(`Call state changed: ${call.state}`);
+            if (call.state === 'Connected') {
+                hangUpButton.disabled = false;
+                joinButton.disabled = true;
+                //stopjoinButton.disabled = false
+            } else if (call.state === 'Disconnected') {
+                joinButton.disabled = false;
+                LogConsole(`Call ended, call end reason={code=${call.callEndReason.code}, subCode=${call.callEndReason.subCode}}`);
+            }
+        });
+        // Show the local Video Stream
+        call.localVideoStreams.forEach(async (lvs) => {
+            LogConsole("show the local video")
+            localVideoStream = lvs;
+            await DisplayLocalVideo()
+        });
+
+        // Handle the local video stream updated
+        LogConsole("Listening for localVideoStreamsUpdated")
+        call.on('localVideoStreamsUpdated', e => {
+            LogConsole("local video stream updated", e);
+            e.added.forEach(async (lvs) => {
+                localVideoStream = lvs;
+                await DisplayLocalVideo();
+            });
+            e.removed.forEach(lvs => {
+                removeLocalVideoStream();
+            });
+        });
+
+        // Inspect the call's current remote participants and subscribe to them.
+        LogConsole("subscribing to remote participants already in call");
+        call.remoteParticipants.forEach(async (remoteParticipant) => {
+            await subscribeToRemoteParticipant(remoteParticipant);
+        })
+        // Subscribe to the call's 'remoteParticipantsUpdated' event to be
+        // notified when new participants are added to the call or removed from the call.
+        LogConsole("listening for remote participants");
+        call.on('remoteParticipantsUpdated', e => {
+            // Subscribe to new remote participants that are added to the call.
+            e.added.forEach(async (remoteParticipant) => {
+                await subscribeToRemoteParticipant(remoteParticipant)
+            });
+            // Unsubscribe from participants that are removed from the call
+            e.removed.forEach(remoteParticipant => {
+                LogConsole('Remote participant removed from the call.');
+            })
+        });
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+// Subscribe to a remote participant obj.
+// Listen for property changes and collection updates.
+async function subscribeToRemoteParticipant(remoteParticipant) {
+    try {
+        // Inspect the initial remoteParticipant.state value.
+        LogConsole(`Remote participant state: ${remoteParticipant.state}`);
+        // Subscribe to remoteParticipant's 'stateChanged' event for value changes.
+        remoteParticipant.on('stateChanged', async () => {
+            LogConsole(`Remote participant state changed: ${remoteParticipant.state}`);
+            if (remoteParticipant.state === 'Connected') {
+                let id = GetId(remoteParticipant.identifier.communicationUserId);
+                await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
+            }
+        });
+
+        // Inspect the remoteParticipants current videoStreams and subscribe to them.
+        remoteParticipant.videoStreams.forEach(async (remoteVideoStream) => {
+            await subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream)
+        });
+        // Subscribe to the remoteParticipant's 'videoStreamsUpdated' event to be
+        // notified when the remoteParticipant adds new videoStreams and removes video streams.
+        remoteParticipant.on('videoStreamsUpdated', e => {
+            // Subscribe to new remote participant's video streams that were added.
+            e.added.forEach(async (remoteVideoStream) => {
+                LogConsole("subscribing to remote video stream");
+                await subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream);
+
+            });
+            // Unsubscribe from remote participant's video streams that were removed.
+            e.removed.forEach(remoteVideoStream => {
+                LogConsole('Remote participant video stream was removed.');
+            })
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+// Subscribe to a remote participant's remote video stream obj.
+// Listen for property changes and collection updates.
+// When their remote video streams become available, display them in the UI.
+async function subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream) {
+    // Create a video stream renderer for the remote video stream.
+    let videoStreamRenderer = new VideoStreamRenderer(remoteVideoStream);
+    let view;
+
+    remoteVideoStream.on('isAvailableChanged', async () => {
+        // Participant has switched video on.
+        if (remoteVideoStream.isAvailable) {
+            console.log(remoteParticipant);
+            let id = GetId(remoteParticipant.identifier.communicationUserId);
+            await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
+            await DisplayRemoteVideo(id, remoteVideoStream);
+
+            // Participant has switched video off.
+        } else {
+            if (view) {
+                view.dispose();
+                view = undefined;
+            }
+        }
+    });
+
+    // Participant has video on initially.
+    if (remoteVideoStream.isAvailable) {
+        let id = GetId(remoteParticipant.identifier.communicationUserId);
+        await DisplayRemoteVideo(id, remoteVideoStream);
+    }
+}
+
+
+//Log debug info
+function LogConsole(data, object) {
+    let el = document.createElement("div");
+    el.innerHTML = data;
+    consoleOut.appendChild(el);
+
+}
 export { getCookie, setCookie };

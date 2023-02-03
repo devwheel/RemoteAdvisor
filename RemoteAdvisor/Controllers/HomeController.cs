@@ -12,7 +12,13 @@ namespace RemoteAdvisor.Controllers
         {
             return View();
         }
-
-       
+        public ActionResult TestPage()
+        {
+            return View();
+        }
+        public ActionResult Helper()
+        {
+            return View();
+        }
     }
 }

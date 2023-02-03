@@ -1,7 +1,7 @@
 {
-  "name": "RemoteAdvisor",
+  "name": "remoteadvisor",
   "version": "1.0.0",
-  "description": "",
+  "description": "<h1>Integrating Video into your Applications with Azure Communication Services</h1> <h2>Background</h2> <p>I’ve done a lot of work with customers a couple of years ago promoting remote advisor scenarios utilizing API’s from the Skype for Business group. I was working with healthcare companies experimenting with Telemedicine solutions and other types of “remote advisor” scenarios such as premier financial service advisors. The team was in full speed ahead mode when it was abruptly announced that Skype for Business was getting merged into Microsoft Teams. This halted the completion of a lot of the work we were doing at the time. The truth be told, integrating these scenarios as stock solutions created complexities in the applications as the dependency for Skype for Business was required.</p> <p> Fast forward to 2021. Microsoft has announced a new service in Azure to provide the same capabilities as a stand-a-lone service as Azure Communication Services. Azure Communication Services support Chat, Telephony, SMS, Voice, and Video calling via JavaScript and there is an iOS and Android SDK. The goal of this article is to highlight the video calling service and walk you through some of the key APIs to add voice/video to your applications using JavaScript. I want to put my spin on this article, otherwise you can just walk through the SDK samples at Azure Communication Services - Samples. I felt the need to publish this article to bridge the gap that I faced as a traditional .Net developer. It seems everything at Microsoft these days is leveraging the React framework for front end development. Although it seems to be an elegant framework, I’m not proficient in it yet and following most of the samples is painful at best for me. </p> <h2>Getting Started</h2> <p> The first thing you will need to do is spin up an ACS instance in Azure. </p> <p> Once you create the service, you will minimally need to setup your usage keys (primarily the connection string). So now we’re ready to roll! </p> <h2>Now the Code</h2> <p> I’m going to create a sample using the .Net Framework vs .Net Core as there are some samples that utilize .Net Core out there and it is my belief that there is still a lot of .Net Framework web applications out there that could easily use this article as a recipe for integration. The illustration below documents the settings that I used to create the .Net Web Application. Note that I added Web API to the solution. </p> <p> We also need to add nuget packages to support the project: • Install-Package Azure.Communication.Common -Version 1.0.0-beta.3 • Install-Package Azure.Communication.Administration -Version 1.0.0-beta.3 </p> <h3>Authentication</h3> <p> ACS allows you to create identities and manage your access tokens. The identities created do not contain any PII data so you would typically map that identity as a property of your application’s identity solution. For a real “quick start” there is a nice sample that implements this in an Azure function. We will go ahead and implement it as part of our solution so we will need a web API to do this. I’m going to create 2 APIs for this. Below is the 2 APIs that I created for token management.   • The first API creates the user and gets a token for that new user.   • The second API refreshes a token for a user that has an identity. The returned tokenResponse will have a structure like:",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,7 +18,13 @@
   },
   "homepage": "https://github.com/devwheel/RemoteAdvisor#readme",
   "dependencies": {
-    "@azure/communication-calling": "^1.1.0",
-    "@azure/communication-common": "^1.1.0"
+    "@azure/communication-calling": "^1.4.4",
+    "@azure/communication-common": "^1.1.0",
+    "@azure/logger": "^1.0.3"
+  },
+  "-vs-binding": {
+    "BeforeBuild": [
+      "test"
+    ]
   }
 }

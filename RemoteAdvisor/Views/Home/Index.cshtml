@@ -8,17 +8,17 @@
 <head>
     <title>Remote Advisor</title>
     <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/css/bootstrap.min.css" crossorigin="anonymous" rel="stylesheet">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.0/js/bootstrap.min.js"></script>
+    @*<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>*@
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
     <link href="/Content/Join.css" rel="stylesheet" />
-
+    <style>
+    </style>
 </head>
 <body>
 
@@ -35,10 +35,10 @@
                     <div class="video-card">
                         <div id="video" class="video-panel"></div>
                         <div id="video-bar" class="toolbar">
-                            <div class="form-group form-inline">
-                                <div class="media-control inactive-control text-center" id="local-video-switch" data-value="off"><i id="my-cam-off" class="fa fa-video-slash"></i><i id="my-cam-on" class="fa fa-video hidden"></i></div>
+                            <div id="toolbar" class="d-flex flex-wrap">
+                                <div id="local-video-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-cam-off" title="Turn on Camera" class="fa fa-video-slash"></i><i id="my-cam-on" title="Turn off Camera" class="fa fa-video hidden"></i></div>
                                 <span style="width:10px"></span>
-                                <div class="media-control inactive-control text-center" id="local-microphone-switch" data-value="off"><i id="my-mic-off" class="fa fa-microphone-slash"></i><i id="my-mic-on" class="fa fa-microphone hidden"></i></div>
+                                <div id="local-microphone-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-mic-off" title="Unmute Mic" class="fa fa-microphone-slash"></i><i id="my-mic-on" title="Mute Mic" class="fa fa-microphone hidden"></i></div>
                                 <button id="video-button" type="button" disabled="disabled" class="btn btn-sm btn-primary matching-button">Join Call</button>
                                 <button id="hang-up-button" type="button" disabled="disabled" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
                             </div>
@@ -55,7 +55,7 @@
                     <div id="cameras" style="display:none; margin-top: 20px;">
                         <label labelfor="camera-list">
                             Cameras
-                            <select id="camera-list" class="form-control">
+                            <select id="camera-list" class="form-select">
                             </select>
                         </label>
                     </div>
@@ -63,14 +63,14 @@
                     <div id="mics" style="display:none; margin-top: 20px;">
                         <label labelfor="mic-list">
                             Microphones
-                            <select id="mic-list" class="form-control">
+                            <select id="mic-list" class="form-select">
                             </select>
                         </label>
                     </div>
                     <div id="speakers" style="display:none; margin-top: 20px;">
                         <label labelfor="speaker-list">
                             Speakers
-                            <select id="speaker-list" class="form-control">
+                            <select id="speaker-list" class="form-select">
                             </select>
                         </label>
                     </div>
@@ -90,7 +90,7 @@
             </div>
         </div>
         <!-- Call Status and Remote Participant Counts -->
-        <div class="row">
+        <div id="call-info" class="row">
             <div class="col-5 formal-section">
                 <h5>Call Status</h5>
                 <div id="status-bar1" class="col-5">
@@ -109,9 +109,13 @@
                 </div>
             </div>
         </div>
+        <div>
+            <h4>Logs</h4>
+            <div id="console-out"></div>
+        </div>
     </div>
     <!--Modal Dialog-->
-    <div class="modal" id="modal-login" tabindex="-1" role="dialog">
+    <div class="modal" id="modal-login" tabindex="-1" role="dialog"  data-bs-keyboard="false" data-bs-backdrop="static">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -125,7 +129,7 @@
                     <input type="text" id="user-name" class="form-control" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary btn-default" onclick="Login()">Login</button>
+                    <button id="btnLogin" type="button" class="btn btn-primary btn-default">Login</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -133,40 +137,14 @@
     </div>
     <div id="root"></div>
     <input type="hidden" id="login-name" />
+    <input type="hidden" id="token" />
+    <input type="hidden" id="token-expires" />
+    <input type="hidden" id="userid" />
+    <input type="hidden" id="email" />
     <script src="~/Scripts/App/Bundle.js"></script>
     <script>
 
-        function Login() {
-            let name = document.getElementById("user-name").value;
-            setCookie("name", name);
-            document.getElementById("call-panel").classList.remove("hidden");
-            $('#modal-login').modal('hide');
-        };
-
-
-        function setCookie(name, value, days) {
-            if (days) {
-                var date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toGMTString();
-            }
-            else {
-                expires = "";
-            }
-            document.cookie = name + "=" + value + expires + "; path=/";
-            //console.log(value);
-        }
-
-        function getCookie(name) {
-            var nameEQ = name + "=";
-            var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
+ 
     </script>
 
 
