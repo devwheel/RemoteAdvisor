@@ -30,7 +30,7 @@ const videoElement = document.getElementById("video");
 const refreshElement = document.getElementById("refresh-participants");
 const loginButton = document.getElementById("btnLogin");
 const consoleOut = document.getElementById("console-out");
-const remoteDisplay = document.getElementById("remote-displays");
+const remoteDisplays = document.getElementById("remote-displays");
 const participantCount = document.getElementById("call-participants");
 const callState = document.getElementById("call-state");
 
@@ -42,7 +42,7 @@ const localVideoSwitch = document.getElementById("local-video-switch");
 const localMicrophoneSwitch = document.getElementById("local-microphone-switch");
 
 
-const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2779';
+const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2788';
 
 document.addEventListener('DOMContentLoaded', startup);
 
@@ -142,6 +142,14 @@ async function Init(token) {
     document.getElementById('partipant-list').style.display = 'block';
     document.getElementById('media-selectors').style.display = 'block';
     joinButton.disabled = false;
+
+    // Turn on Video if it is not there
+    activeCamera = await GetActiveCamera();
+    localVideoStream = new LocalVideoStream(activeCamera);
+    rendererLocal = new VideoStreamRenderer(localVideoStream);
+    localView = await rendererLocal.createView();
+
+    await ToggleVideo();
 
 }
 
@@ -273,12 +281,19 @@ function ShowParticipantList() {
 
 };
 
-async function DisplayRemoteVideo(id, stream) {
+async function DisplayRemoteVideo(id, remoteStream) {
     LogConsole("Trying to display Remote Video");
-    let renderer = new VideoStreamRenderer(stream);
-    let view = await renderer.createView();
-    //FIX THIS as the doc manipution seems to break the video
-    document.getElementById(id).appendChild(view.target);
+    if (rendererRemote === undefined) 
+        rendererRemote = new VideoStreamRenderer(remoteStream);
+    
+    let view = await rendererRemote.createView();
+    if (view != null) {
+        let elId = `video-${id}`;
+        //let elId = "remote-video";
+        let el = document.getElementById(elId);
+        console.log(el);
+        el.appendChild(view.target);
+    }
 }
 
 async function DisplayLocalVideo() {
@@ -514,10 +529,12 @@ async function CreateRemoteParticipantElement(id, userName) {
     console.log("creating remote box for " + userName);
     let remoteElement = document.getElementById("remote-" + id);
     if (remoteElement !== null) {
+        console.log("element exists");
         return;
     }
 
-    let newElement = '<h5 class="drag-bar">Remote Participant Video</h5><div  class="video-card"><div id="' + id + '" class="video-panel"></div><div id="remote-video-bar" class="toolbar"><div id="remote-name-' + id + '" class="form-group form-inline">' + userName + '</div></div>';
+    //let newElement = '<h5 class="drag-bar">Remote Participant Video</h5><div class="video-card"><div id="remote-' + id + '" class="video-panel"></div>` ;
+    //let foo =   `<div id="remote-video-bar" class="toolbar" > <div id="remote-name-' + id + '" class="form-group form-inline">' + userName + '</div></div > ';
 
     let remoteDisplays = document.getElementById('remote-displays');
     var remoteEl = document.createElement("div");
@@ -526,10 +543,43 @@ async function CreateRemoteParticipantElement(id, userName) {
     remoteEl.classList.add("formal-section");
     remoteEl.classList.add("video-card-holder");
     remoteEl.classList.add("remote-panel");
-    remoteEl.innerHTML = newElement;
-    remoteDisplays.append(remoteEl);
+    let elH5 = document.createElement("h5");
+    elH5.innerHTML = "Remote Participant Video";
+    remoteEl.appendChild(elH5);
+
+    let elVC = document.createElement("div");
+    elVC.classList.add("video-card");
+    let elVP = document.createElement("div");
+    elVP.id = "video-" + id;
+    elVP.className = "video-panel";
+    elVC.appendChild(elVP);
+
+    //Create toolbar
+    let tbEl = document.createElement("div");
+    tbEl.className = "toolbar";
+
+    let nmEl = document.createElement("div");
+    nmEl.id = "remote-name-" + id;
+    nmEl.classList.add("text-center");
+    nmEl.innerHTML = userName;
+    tbEl.appendChild(nmEl);
+
+    elVC.appendChild(tbEl);
+    remoteEl.appendChild(elVC);
+
+    //remoteEl.innerHTML = newElement;
+    remoteDisplays.appendChild(remoteEl);
     return id;
 };
+
+function DestroyRemoteParticpantElement(id) {
+    let remoteElementEl = "remote-" + id;
+    let remoteElement = document.getElementById(remoteElementEl);
+    if (remoteElement !== undefined) {
+        remoteElement.parentNode.removeChild(remoteElement);
+    }
+}
+
 
 function UpdateRemoteParticipantName(userId, name) {
     document.getElementById("remote-name-" + userId).innerHTML = name;
@@ -642,8 +692,11 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
         remoteParticipant.on('stateChanged', async () => {
             LogConsole(`Remote participant state changed: ${remoteParticipant.state}`);
             if (remoteParticipant.state === 'Connected') {
-                let id = GetId(remoteParticipant.identifier.communicationUserId);
-                await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
+                setTimeout(async () => {
+                    let id = GetId(remoteParticipant.identifier.communicationUserId);
+                    await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
+                },3000)
+                
             }
         });
 
@@ -663,6 +716,8 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
             // Unsubscribe from remote participant's video streams that were removed.
             e.removed.forEach(remoteVideoStream => {
                 LogConsole('Remote participant video stream was removed.');
+                let id = GetId(remoteParticipant.identifier.communicationUserId);
+                DestroyRemoteParticpantElement(id);
             })
         });
     } catch (error) {
