@@ -174,8 +174,8 @@ async function JoinVideo() {
     // Configure all the call events/callbacks
     await subscribeToCall(call);
 
-    ShowCallState(call);  //Connecting..=> connected
-
+    await ShowCallState(call);  //Connecting..=> connected
+    ShowParticipantList();
     //UX Settings for a connected call
     participantPanel.classList.remove("hidden");
     callinfoPanel.classList.remove("hidden");
@@ -239,43 +239,6 @@ async function LoadDeviceDropdowns(deviceMgr) {
 
 };
 
-async function ShowParticipantList() {
-
-    let partElement = document.getElementById('participants');
-    //remove all the participants
-    // partElement.find('option').remove();
-    partElement.innerHTML = null;
-
-    //add the local users
-    let me = getCookie("name");
-    // var option = $("<option />");
-    // option.html(me);
-    let option = document.createElement('option');
-    option.innerHTML = me;
-
-    partElement.appendChild(option);
-
-    //add remote users
-    var participants = call.remoteParticipants;
-
-
-    participants.forEach(part => {
-        part.videoStreams.forEach((stream) => {
-            if (stream.type === 'Video') {
-                UpdateRemoteParticipantName(GetId(part.identifier.communicationUserId), part.displayName);
-                LogConsole("video part identifier:", part.identifier);
-            }
-        });
-
-        let option = document.createElement('option');
-        option.innerHTML = part.displayName;
-
-        partElement.appendChild(option);
-
-    });
-
-};
-
 async function DisplayLocalVideo() {
     if (localView === undefined) {
         if (localVideoStream === undefined) {
@@ -312,9 +275,6 @@ async function DisplayRemoteVideo(id, remoteStream) {
         
     }
 }
-
-
-
 
 async function CreateRemoteParticipantElement(id, userName) {
     LogConsole("creating remote box for " + userName);
@@ -373,7 +333,7 @@ function DestroyRemoteParticpantElement(id) {
     let remoteElementEl = "remote-" + id;
     let remoteElement = document.getElementById(remoteElementEl);
     LogConsole("destroying remoteElement", remoteElement);
-    if (remoteElement !== undefined) {
+    if (remoteElement !== null) {
         remoteElement.parentNode.removeChild(remoteElement);
     }
 }
@@ -481,13 +441,17 @@ function SetupListeners() {
         // toggle button states
         hangUpButton.classList.add("hidden");
         joinButton.classList.remove("hidden");
-        ShowCallState(call);
+        await ShowCallState(call);
         participantPanel.classList.add("hidden");
         callinfoPanel.classList.add("hidden");
         myCameraMuted = true;
         ToggleVideo();
         call.dispose();
         call = undefined;
+        document.getElementById("my-cam-on").classList.add("hidden");
+        document.getElementById("my-cam-off").classList.remove("hidden");
+        videoSwitch.classList.remove("active-control");
+        videoSwitch.classList.add("inactive-control");
 
     });
 
@@ -532,6 +496,7 @@ function SetupListeners() {
 
     });
 
+    //show logs area
     showLogsButton.addEventListener("click", () => {
         if (showLogs == true) {
             consoleOut.classList.add("hidden");
@@ -600,7 +565,7 @@ async function ToggleVideo() {
     }
 };
 
-function ShowCallState(e) {
+async function ShowCallState(e) {
     //  let icon = "<i class='fas fa-phone-alt'></i>";
     //might do something here later
     if (e.state !== undefined) {
@@ -639,6 +604,44 @@ function ShowCallState(e) {
         document.getElementById("call-state").innerText = call.state;
     }
 };
+
+async function ShowParticipantList() {
+
+    let partElement = document.getElementById('participants');
+    //remove all the participants
+    // partElement.find('option').remove();
+    partElement.innerHTML = null;
+
+    //add the local users
+    let me = getCookie("name");
+    // var option = $("<option />");
+    // option.html(me);
+    let option = document.createElement('option');
+    option.innerHTML = me;
+
+    partElement.appendChild(option);
+
+    //add remote users
+    if (call !== undefined) {
+        var participants = call.remoteParticipants;
+
+        participants.forEach(part => {
+            part.videoStreams.forEach((stream) => {
+                if (stream.type === 'Video') {
+                    UpdateRemoteParticipantName(GetId(part.identifier.communicationUserId), part.displayName);
+                    LogConsole("video part identifier:", part.identifier);
+                }
+            });
+
+            let option = document.createElement('option');
+            option.innerHTML = part.displayName;
+
+            partElement.appendChild(option);
+
+        });
+    }
+};
+
 
 function UpdateRemoteParticipantName(userId, name) {
     document.getElementById("remote-name-" + userId).innerHTML = name;
@@ -687,7 +690,7 @@ async function subscribeToCall(call) {
 
         // Subscribe to call's 'stateChanged' event for value changes.
         call.on('stateChanged', async () => {
-            ShowCallState(call);
+            await ShowCallState(call);
         });
         // Show the local Video Stream
         call.localVideoStreams.forEach(async (lvs) => {
