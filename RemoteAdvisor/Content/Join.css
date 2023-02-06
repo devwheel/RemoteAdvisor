@@ -106,3 +106,7 @@
 .drag-bar {
     cursor: move
 }
+
+.dropdown-area{ margin-top:20px;}
+#show-logs{cursor:pointer}
+.log-console {height:500px; overflow-y:scroll}

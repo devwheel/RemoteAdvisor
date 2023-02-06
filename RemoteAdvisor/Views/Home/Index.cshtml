@@ -39,8 +39,8 @@
                                 <div id="local-video-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-cam-off" title="Turn on Camera" class="fa fa-video-slash"></i><i id="my-cam-on" title="Turn off Camera" class="fa fa-video hidden"></i></div>
                                 <span style="width:10px"></span>
                                 <div id="local-microphone-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-mic-off" title="Unmute Mic" class="fa fa-microphone-slash"></i><i id="my-mic-on" title="Mute Mic" class="fa fa-microphone hidden"></i></div>
-                                <button id="video-button" type="button" disabled="disabled" class="btn btn-sm btn-primary matching-button">Join Call</button>
-                                <button id="hang-up-button" type="button" disabled="disabled" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
+                                <button id="video-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Connect</button>
+                                <button id="hang-up-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
                             </div>
                         </div>
                     </div>
@@ -52,8 +52,8 @@
         <div id="media-selectors" class="row">
             <div class="col-5 formal-section">
                 <h5>Call Devices</h5>
-                <div class="col">
-                    <div id="cameras" style="display:none; margin-top: 20px;">
+                <div id="device-list" class="col hidden">
+                    <div id="cameras" class="dropdown-area" >
                         <label labelfor="camera-list">
                             Cameras
                             <select id="camera-list" class="form-select">
@@ -61,20 +61,23 @@
                         </label>
                     </div>
 
-                    <div id="mics" style="display:none; margin-top: 20px;">
+                    <div id="mics" class="dropdown-area">
                         <label labelfor="mic-list">
                             Microphones
                             <select id="mic-list" class="form-select">
                             </select>
                         </label>
                     </div>
-                    <div id="speakers" style="display:none; margin-top: 20px;">
+                    <div id="speakers" class="dropdown-area">
                         <label labelfor="speaker-list">
                             Speakers
                             <select id="speaker-list" class="form-select">
                             </select>
                         </label>
                     </div>
+                </div>
+                <div id="device-list-loading">
+                    <h5 class="ms-3">Loading Devices...</h5>
                 </div>
             </div>
 
@@ -91,7 +94,7 @@
             </div>
         </div>
         <!-- Call Status and Remote Participant Counts -->
-        <div id="call-info" class="row">
+        <div id="call-info" class="row hidden">
             <div class="col-5 formal-section">
                 <h5>Call Status</h5>
                 <div id="status-bar1" class="col-5">
@@ -110,11 +113,18 @@
                 </div>
             </div>
         </div>
-        <div>
-            <h4>Logs</h4>
-            <div id="console-out"></div>
+        <div class="row">
+            <div class="col-5 formal-section">
+                <div class="d-flex">
+                    <h5>Logs</h5>
+                    <div class="ms-auto ml-auto">
+                        <i id="show-logs" class="fas fa-angle-down"></i>
+                    </div>
+                </div>
+                <div id="console-out" class="log-console hidden"></div>
+            </div>
         </div>
-    </div>
+        </div>
     <!--Modal Dialog-->
     <div class="modal" id="modal-login" tabindex="-1" role="dialog"  data-bs-keyboard="false" data-bs-backdrop="static">
         <div class="modal-dialog" role="document">
