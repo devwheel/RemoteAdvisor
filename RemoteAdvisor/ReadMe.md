@@ -247,8 +247,8 @@ We now need to run a few commands to get the SDK and setup up the project for bu
 <li>npm install webpack@4.32.2 --save-dev (These commands will add dependencies in the config file)</li>
 <li>npm install webpack-cli@3.3.2 --save-dev</li>
 <li>npm install webpack-dev-server@3.5.1 --save-dev</li>
-<li>npm install @azure/communication-common –save (Add the ACS JS SDKs and creates dependencies)</li>
-<li>npm install @azure/communication-calling –save</li>
+<li>npm install @azure/communication-common@1.9.1 –save (Add the ACS JS SDKs and creates dependencies)</li>
+<li>npm install @azure/communication-calling@2.1.0 –save</li>
 </ul>
 <p>
 At this point we should have the ACS SDK and the Webpack tooling installed into our project and a couple of files that we would typically had to our project; the package.lock.json and the package.json files. We will need to change the main entry from whatever is created to webpack.config.js
