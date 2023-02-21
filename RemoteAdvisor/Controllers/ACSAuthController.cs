@@ -31,12 +31,9 @@ namespace RemoteAdvisor.Controllers
                 string token = string.Empty;
                 CommunicationUserIdentifier identity = null;
                 DateTimeOffset expires = DateTime.UtcNow;
-               // if (request.User.AcsUserId == null)
-               // {
-                    var identityResponse = await client.CreateUserAsync();
-                    request.User.AcsUserId = identityResponse.Value;
-                    identity = identityResponse.Value;
-               // }
+                var identityResponse = await client.CreateUserAsync();
+                request.User.AcsUserId = identityResponse.Value;
+                identity = identityResponse.Value;
                 //check for token expiration
                 var tokenResponse = await client.GetTokenAsync(identity, scopes: new[] { CommunicationTokenScope.VoIP });
                     token = tokenResponse.Value.Token.ToString();

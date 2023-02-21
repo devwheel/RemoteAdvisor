@@ -18,7 +18,6 @@
     <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
     <link href="/Content/Join.css" rel="stylesheet" />
     <style>
-      
     </style>
 </head>
 <body>
@@ -37,10 +36,9 @@
                         <div id="video" class="video-panel"></div>
                         <div id="video-bar" class="toolbar">
                             <div id="toolbar" class="d-flex flex-wrap">
-                                <div id="local-video-switch" class="media-control text-center red fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
+                                <div id="local-video-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-cam-off" title="Turn on Camera" class="fa fa-video-slash"></i><i id="my-cam-on" title="Turn off Camera" class="fa fa-video hidden"></i></div>
                                 <span style="width:10px"></span>
-                                <div id="local-microphone-switch" class="media-control text-center red fa fa-microphone-slash" data-value="off" title="Turn on Microphone">
-                                </div>
+                                <div id="local-microphone-switch" class="media-control inactive-control text-center" data-value="off"><i id="my-mic-off" title="Unmute Mic" class="fa fa-microphone-slash"></i><i id="my-mic-on" title="Mute Mic" class="fa fa-microphone hidden"></i></div>
                                 <button id="video-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Connect</button>
                                 <button id="hang-up-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
                             </div>

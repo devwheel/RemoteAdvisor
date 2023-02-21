@@ -25,17 +25,17 @@ let recipientTracker = [];
 let lastCamera = 0;
 let lastMicrophone = 0;
 let lastSpeaker = 0;
-const consoleOut = document.getElementById("console-out");
+
 const btnHangup = document.getElementById("hang-up-button");
 const btnJoinCall = document.getElementById("video-button");
 const btnVideoToggle = document.getElementById("local-video-switch");
-LogConsole(btnVideoToggle);
 const btnMicrophoneToggle = document.getElementById("local-microphone-switch");
 
 
-const localVideoElement = document.getElementById("video");
+const videoElement = document.getElementById("video");
 const refreshElement = document.getElementById("refresh-participants");
 const loginButton = document.getElementById("btnLogin");
+const consoleOut = document.getElementById("console-out");
 const remoteDisplays = document.getElementById("remote-displays");
 const callinfoPanel = document.getElementById("call-info");
 const participantPanel = document.getElementById("participant-panel");
@@ -43,9 +43,11 @@ const participantCount = document.getElementById("call-participants");
 const callState = document.getElementById("call-state");
 const showLogsButton = document.getElementById("show-logs");
 
-const dropdownCamera = document.getElementById("camera-list");
-const dropdownMicrophone = document.getElementById("mic-list");
-const dropdownSpeaker = document.getElementById("speaker-list");
+const cameraDropdown = document.getElementById("camera-list");
+const microphoneDropdown = document.getElementById("mic-list");
+const speakerDropdown = document.getElementById("speaker-list");
+
+
 
 const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2777';
 
@@ -77,7 +79,7 @@ async function startup() {
     $("#token").val(getCookie("token"));
     $("#token-expires").val(getCookie("expires"));
     let tokenResponse = await GetToken();
-    LogConsole("tokenResponse", tokenResponse);
+    LogConsole("tokenResponse",tokenResponse);
     await Init(tokenResponse.Token);
 
 }
@@ -139,7 +141,7 @@ async function Init(token) {
     LogConsole("deviceManager", deviceManager);
 
     //Browser consent
-    if (isMobileBrowser() === false)
+    if (isMobileBrowser() === false) 
         await deviceManager.askDevicePermission({ video: true, audio: true });
 
     //Load Device Dropdowns with Devices
@@ -150,6 +152,14 @@ async function Init(token) {
     if (isMobileBrowser() === false)
         activeCamera = await GetActiveCamera();
     LogConsole("We have an active camera", activeCamera);
+
+    localVideoStream = new LocalVideoStream(activeCamera);
+    LogConsole("We have an active local stream", localVideoStream);
+
+    rendererLocal = new VideoStreamRenderer(localVideoStream);
+    localView = await rendererLocal.createView();
+
+    await ToggleVideo();
 
     btnJoinCall.classList.remove("hidden");
 
@@ -182,79 +192,83 @@ async function JoinVideo() {
 };
 
 async function LoadDeviceDropdowns(deviceMgr) {
-    //mobile device so don't setup dropdowns
-    //get all the camera devices
-    cameras = await deviceMgr.getCameras();
-    LogConsole("camera enumeration", cameras);
-    //add the cameras to the dropdown list
-    let i = 0;
-    cameras.forEach(camera => {
-        let option = document.createElement('option');
-        option.value = camera.id;
-        option.innerHTML = camera.name.replace(/ *\([^)]*\) */g, "");
-        if (camera.id === lastCamera) {
-            option.selected = true;
-        }
-        dropdownCamera.appendChild(option);
-        i++;
-    });
-
-    //get all the mics
-    microphones = await deviceMgr.getMicrophones();
-    //add the mics to the dropdown list
-    i = 0;
-    microphones.forEach(mic => {
-        let option = document.createElement('option');
-        option.value = mic.id;
-        //option.innerHTML = mic.name.replace(/ *\([^)]*\) */g, "");;
-        option.innerHTML = mic.name;
-        if (i === lastMicrophone) {
-            option.selected = true;
-        }
-        dropdownMicrophone.appendChild(option);
-        i++;
-    });
-
-
     if (isMobileBrowser == false) {
+        //get all the camera devices
+        LogConsole("Loading Device Dropdowns");
+        cameras = await deviceMgr.getCameras();
+        //add the cameras to the dropdown list
+        let cameraSelector = document.getElementById('camera-list');
+        let i = 0;
+        cameras.forEach(camera => {
+            let option = document.createElement('option');
+            option.value = camera.id;
+            option.innerHTML = camera.name;
+            if (camera.id === lastCamera) {
+                option.selected = true;
+            }
+            cameraSelector.appendChild(option);
+            i++;
+        });
+
+
+        //get all the mics
+        microphones = await deviceMgr.getMicrophones();
+        //add the mics to the dropdown list
+        let micSelector = document.getElementById('mic-list');
+        i = 0;
+        microphones.forEach(mic => {
+            let option = document.createElement('option');
+            option.value = mic.id;
+            option.innerHTML = mic.name;
+            if (i === lastMicrophone) {
+                option.selected = true;
+            }
+            micSelector.appendChild(option);
+            i++;
+        });
+        // micSelector.options[micSelector.options.length - 1]
 
         //get all the speakers
         speakers = await deviceMgr.getSpeakers();
         //add the mics to the dropdown list
+        let speakerSelector = document.getElementById("speaker-list");
         i = 0;
         speakers.forEach((speaker) => {
             let option = document.createElement('option');
             option.value = speaker.id;
-            //option.innerHTML = speaker.name.replace(/ *\([^)]*\) */g, "");
             option.innerHTML = speaker.name;
             if (i === lastSpeaker) {
                 option.selected = true;
             }
-            dropdownSpeaker.appendChild(option);
+            speakerSelector.appendChild(option);
             i++;
         });
-        document.getElementById("speakers").classList.remove("hidden");
-    } else {
-        activeCamera = cameras[0];
-        LogConsole("camera: " + activeCamera.name);
-        document.getElementById("speakers").classList.add("hidden");
 
+        SetupListeners();
+        //show the device lists
+        document.getElementById("device-list").classList.remove("hidden");
+        document.getElementById("device-list-loading").classList.add("hidden");
     }
-    SetupListeners();
-    document.getElementById("device-list-loading").classList.add("hidden");
-    document.getElementById("device-list").classList.remove("hidden");
-}
+    else {
+        //mobile device so don't setup dropdowns
+        cameras = await deviceMgr.getCameras();
+        microphones = await deviceMgr.getMicrophones();
+        //speakers = await deviceMgr.getSpeakers();
+        activeCamera = cameras[0];
+    }
+};
 
 async function DisplayLocalVideo() {
     if (localView === undefined) {
         if (localVideoStream === undefined) {
-            activeCamera = await GetActiveCamera();
+            //activeCamera = await GetActiveCamera();
             localVideoStream = new LocalVideoStream(activeCamera);
         }
-        const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
         rendererLocal = new VideoStreamRenderer(localVideoStream);
-        localView = await rendererLocal.createView();
-        localVideoElement.appendChild(localView.target);
+        localView = await renderer.createView();
+        LogConsole("localView", localView);
+        videoElement.appendChild(localView.target);
+        document.getElementById("local-video-switch").setAttribute("data-value", "on");
         return localVideoStream;
     }
 };
@@ -262,9 +276,9 @@ async function DisplayLocalVideo() {
 async function DisplayRemoteVideo(id, remoteStream) {
     let elId = `video-${id}`;
     LogConsole(`Trying to display Remote Video at ${elId}`);
-    if (rendererRemote === undefined)
+    if (rendererRemote === undefined) 
         rendererRemote = new VideoStreamRenderer(remoteStream);
-
+    
     let view = await rendererRemote.createView();
     if (view !== null) {
         let el = document.getElementById(elId);
@@ -276,8 +290,8 @@ async function DisplayRemoteVideo(id, remoteStream) {
         } else {
             el.appendChild(view.target);
         }
-
-
+        
+        
     }
 }
 
@@ -296,9 +310,9 @@ async function CreateRemoteParticipantElement(id, userName) {
     recip.displayName = userName;
     recip.id = id;
     recip.element = elementId;
-    recip.localVideoElement = `video-${id}`;
+    recip.videoElement = `video-${id}`;
     recipientTracker.push(recip);
-
+    
     let remoteEl = document.createElement("div");
     remoteEl.id = "remote-" + id;
     remoteEl.classList.add("col-5");
@@ -355,26 +369,20 @@ function DestroyRemoteParticipantVideo(id) {
 
 }
 
-async function DestroyLocalVideo() {
+function DestroyLocalVideo() {
     //Check on all participants as the person muting video would fail here
     while (video.lastElementChild) {
         video.removeChild(video.lastElementChild);
     }
-    localView.dispose();
-    localView = undefined;
 }
 
 async function GetActiveCamera() {
-    if (!isMobileBrowser) {
-        let list = document.getElementById("camera-list");
-        let cameraId = list.value;
+    let list = document.getElementById("camera-list");
+    let cameraId = list.value;
 
-        let cameras = await deviceManager.getCameras();
-        let camera = cameras.filter(cam => cam.id == cameraId)[0];
-        return camera;
-    } else {
-        return cameras[0];
-    }
+    let cameras = await deviceManager.getCameras();
+    let camera = cameras.filter(cam => cam.id == cameraId)[0];
+    return camera;
 };
 
 function LoadCookieSettings() {
@@ -411,7 +419,7 @@ function SetupListeners() {
     });
 
     //change camera
-    dropdownCamera.addEventListener("change", async () => {
+    cameraDropdown.addEventListener("change", async () => {
         let cameraId = document.getElementById("camera-list").value;
         setCookie("camera", cameraId);
         let camDeviceInfo = cameras.filter(cam => cam.id == cameraId)[0];
@@ -421,7 +429,7 @@ function SetupListeners() {
     });
 
     //change microphone
-    dropdownMicrophone.addEventListener("change", async () => {
+    microphoneDropdown.addEventListener("change", async () => {
         let micIndex = document.getElementById("mic-list").selectedIndex;
         let micDeviceInfo = microphones[micIndex];
         setCookie("microphone", micIndex);
@@ -430,7 +438,7 @@ function SetupListeners() {
     });
 
     //change speaker
-    dropdownSpeaker.addEventListener("change", async () => {
+    speakerDropdown.addEventListener("change", async () => {
         let speakerIndex = document.getElementById("speaker-list").selectedIndex;
         let speakerDeviceInfo = speakers[speakerIndex];
         setCookie("speaker", speakerIndex);
@@ -468,12 +476,12 @@ function SetupListeners() {
 
     //toggle local video
     btnVideoToggle.addEventListener("click", async () => {
-        LogConsole("toggle video");
+
         await ToggleVideo();
     });
 
     //toggle mute
-    btnMicrophoneToggle.addEventListener("click", async () => {
+    btnMicrophoneToggle.addEventListener("click", () => {
         await ToggleAudio();
 
     });
@@ -483,7 +491,7 @@ function SetupListeners() {
         if (showLogs == true) {
             consoleOut.classList.add("hidden");
             showLogs = false;
-
+            
         }
         else {
             consoleOut.classList.remove("hidden");
@@ -494,82 +502,84 @@ function SetupListeners() {
 
 };
 
-// toggle video sets the action on the button
-// and the UX state
 async function ToggleVideo() {
-    let currentValue = btnVideoToggle.getAttribute("data-value");
-    btnVideoToggle.setAttribute("disabled", "disabled"); //deactivate for the moment
-    if (currentValue === 'off') {
-        //UX Element State - Change to on:  Blue and Video and on data-value
-        btnVideoToggle.setAttribute("data-value", "on");
-        btnVideoToggle.setAttribute("title", "Turn off video");
-        btnVideoToggle.classList.remove("red"); btnVideoToggle.classList.add("blue");
-        btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnVideoToggle.classList.remove("fa-video-slash"); btnVideoToggle.classList.add("fa-video");
+    let videoSwitch = document.getElementById("local-video-switch")
+    LogConsole('starting video toggle');
+    if (myCameraMuted) {
+        //Turn on Video
+        videoSwitch.classList.remove("inactive-control");
+        videoSwitch.classList.add("active-control");
+        document.getElementById("my-cam-on").classList.remove("hidden");
+        document.getElementById("my-cam-off").classList.add("hidden");
 
         if (localVideoStream === undefined) {
             localVideoStream = await DisplayLocalVideo();
         }
         else {
-            if (localView === undefined)
-                localView = await rendererLocal.createView();
-            localVideoElement.appendChild(localView.target);
+            LogConsole("loca video stream exists, appending to local video element: ", localVideoStream)
+            localView = await rendererLocal.createView();
+            videoElement.appendChild(localView.target);
         }
 
-        if (call !== undefined && call !== null) {
-            try {
-                await call.startVideo(localVideoStream);
-            } catch (err) {
-                LogConsole("Error starting video: " + err);
-            }
+        if (call !== undefined) {
+            LogConsole("call is started ", call.islLocalVideoStarted);
+            LogConsole("starting video on call", call);
+            await call.startVideo(localVideoStream);
+            localView = await rendererLocal.createView();
+            videoElement.appendChild(localView.target);
         }
+        myCameraMuted = false;
     } else {
         //turn off video
-        //UX Element State - Change to off:  Red and Video-Slas and off data-value
-        btnVideoToggle.setAttribute("data-value", "off");
-        btnVideoToggle.setAttribute("title", "Turn on video");
-        btnVideoToggle.classList.remove("blue"); btnVideoToggle.classList.add("red");
-        btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnVideoToggle.classList.remove("fa-video"); btnVideoToggle.classList.add("fa-video-slash");
-
 
         try {
-            if (call !== undefined && call !== null) {
+            if (call !== undefined) {
                 LogConsole("isLocalVideoStarted", call.isLocalVideoStarted)
                 LogConsole("stopping video on call", call);
                 await call.stopVideo(localVideoStream);
-
+               
             }
         } catch (e) {
             LogConsole("toggle off error" + e);
         }
-        await DestroyLocalVideo();
+        videoSwitch.classList.remove("active-control");
+        videoSwitch.classList.add("inactive-control");
+        document.getElementById("my-cam-on").classList.add("hidden");
+        document.getElementById("my-cam-off").classList.remove("hidden");
+        DestroyLocalVideo();
+        myCameraMuted = true;
+        //if (localView.target != null) {
+        //    videoElement.removeChild(localView.target);
+        //}
 
     }
-    btnVideoToggle.removeAttribute("disabled"); //re-activate
 };
 
 async function ToggleAudio() {
-    let status = btnMicrophoneToggle.getAttribute("data-value");
-    if (status === "off") {
-        btnMicrophoneToggle.setAttribute("data-value", "on");
-        btnMicrophoneToggle.setAttribute("title", "Turn off microphone");
-        btnMicrophoneToggle.classList.remove("red"); btnMicrophoneToggle.classList.add("blue");
-        btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnMicrophoneToggle.classList.remove("fa-microphone-slash"); btnMicrophoneToggle.classList.add("fa-microphone");
+    let status = document.getElementById("local-microphone-switch").getAttribute("data-value");
+    let mic = document.getElementById("local-microphone-switch")
 
+    if (status === "off") {
+
+        mic.classList.remove("inactive-control");
+        mic.classList.add("active-control");
+        mic.setAttribute("data-value", "on");
+        document.getElementById("my-mic-on").classList.remove("hidden");
+        document.getElementById("my-mic-off").classList.add("hidden");
+        myMicrophoneMuted = false;
         if (call !== undefined) {
             LogConsole("unmute call");
             call.unmute();
         }
     } else {
 
-        btnMicrophoneToggle.setAttribute("data-value", "off");
-        btnMicrophoneToggle.setAttribute("title", "Turn on microphone");
-        btnMicrophoneToggle.classList.remove("blue"); btnMicrophoneToggle.classList.add("red");
-        btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnMicrophoneToggle.classList.remove("fa-microphone"); btnMicrophoneToggle.classList.add("fa-microphone-slash");
+        mic.classList.remove("active-control");
+        mic.classList.add("inactive-control");
+        mic.setAttribute("data-value", "off");
+        document.getElementById("my-mic-on").classList.add("hidden");
+        document.getElementById("my-mic-off").classList.remove("hidden");
 
+        myMicrophoneMuted = true;
         if (call !== undefined) {
             LogConsole("mute call");
             call.mute();
@@ -724,7 +734,7 @@ async function subscribeToCall(call) {
             });
             setTimeout(async () => {
                 await ShowParticipantList();
-            }, 3000)
+            },3000)
         });
 
         // Inspect the call's current remote participants and subscribe to them.
@@ -765,7 +775,7 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
                 setTimeout(async () => {
                     await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
                     ShowParticipantList();
-                }, 3000)
+                },3000)
             }
             if (remoteParticipant.state === 'Disconnected') {
                 //Remote Participant hung up so remove the element
@@ -805,7 +815,7 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
 async function subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream) {
     remoteVideoStream.on('isAvailableChanged', async () => {
         let id = GetId(remoteParticipant.identifier.communicationUserId);
-        LogConsole(`visibility changed for ${id}`, remoteVideoStream.isAvailable);
+        LogConsole(`visibility changed for ${id}`,remoteVideoStream.isAvailable);
         // Participant has switched video on.
         if (remoteVideoStream.isAvailable) {
             LogConsole("remote participant is now available for " + remoteParticipant.displayName, remoteParticipant);
