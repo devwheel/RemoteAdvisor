@@ -26,7 +26,7 @@
     <div class="container">
         <div id="play"></div>
         <h4>Azure Communication Services</h4>
-        <h1>Calling Quickstart</h1>
+        <h1>Calling Asp.Net Quickstart</h1>
         <div id="call-panel" class="hidden">
             <!-- panels for video display -->
             <div class="row" id="remote-displays">
@@ -37,9 +37,9 @@
                         <div id="video" class="video-panel"></div>
                         <div id="video-bar" class="toolbar">
                             <div id="toolbar" class="d-flex flex-wrap">
-                                <div id="local-video-switch" class="media-control text-center red fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
+                                <div id="local-video-switch" class="media-control text-center off-state fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
                                 <span style="width:10px"></span>
-                                <div id="local-microphone-switch" class="media-control text-center red fa fa-microphone-slash" data-value="off" title="Turn on Microphone">
+                                <div id="local-microphone-switch" class="media-control text-center off-state fa fa-microphone-slash" data-value="off" title="Turn on Microphone">
                                 </div>
                                 <button id="video-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Connect</button>
                                 <button id="hang-up-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
@@ -123,7 +123,7 @@
                         <i id="show-logs" class="fas fa-angle-down"></i>
                     </div>
                 </div>
-                <div id="console-out" class="log-console"></div>
+                <div id="console-out" class="log-console hidden"></div>
             </div>
         </div>
         </div>

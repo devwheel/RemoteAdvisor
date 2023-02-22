@@ -11,8 +11,6 @@ let localVideoStream;
 let localView;
 
 
-let myCameraMuted = true;
-let myMicrophoneMuted = true;
 let cameras;
 let activeCamera;
 let rendererLocal;
@@ -29,7 +27,6 @@ const consoleOut = document.getElementById("console-out");
 const btnHangup = document.getElementById("hang-up-button");
 const btnJoinCall = document.getElementById("video-button");
 const btnVideoToggle = document.getElementById("local-video-switch");
-LogConsole(btnVideoToggle);
 const btnMicrophoneToggle = document.getElementById("local-microphone-switch");
 
 
@@ -162,10 +159,9 @@ async function JoinVideo() {
     // Turn on Video if it is not there
     if (localVideoStream === undefined) {
         localVideoStream = new LocalVideoStream(activeCamera);
-        myCameraMuted = true;
         await ToggleVideo(); //need to fix
     }
-    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
+    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: false } };
     const context = { groupId: groupId };   //context of the call Group/Teams/Room/etc
 
     //Setup the call/meeting
@@ -251,7 +247,6 @@ async function DisplayLocalVideo() {
             activeCamera = await GetActiveCamera();
             localVideoStream = new LocalVideoStream(activeCamera);
         }
-        const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: myMicrophoneMuted } };
         rendererLocal = new VideoStreamRenderer(localVideoStream);
         localView = await rendererLocal.createView();
         localVideoElement.appendChild(localView.target);
@@ -455,12 +450,9 @@ function SetupListeners() {
         await ShowCallState(call);
         participantPanel.classList.add("hidden");
         callinfoPanel.classList.add("hidden");
-        myCameraMuted = true;
         ToggleVideo();
         call.dispose();
         call = undefined;
-        document.getElementById("my-cam-on").classList.add("hidden");
-        document.getElementById("my-cam-off").classList.remove("hidden");
         videoSwitch.classList.remove("active-control");
         videoSwitch.classList.add("inactive-control");
 
@@ -503,7 +495,7 @@ async function ToggleVideo() {
         //UX Element State - Change to on:  Blue and Video and on data-value
         btnVideoToggle.setAttribute("data-value", "on");
         btnVideoToggle.setAttribute("title", "Turn off video");
-        btnVideoToggle.classList.remove("red"); btnVideoToggle.classList.add("blue");
+        btnVideoToggle.classList.remove("off-state"); btnVideoToggle.classList.add("on-state");
         btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
         btnVideoToggle.classList.remove("fa-video-slash"); btnVideoToggle.classList.add("fa-video");
 
@@ -528,7 +520,7 @@ async function ToggleVideo() {
         //UX Element State - Change to off:  Red and Video-Slas and off data-value
         btnVideoToggle.setAttribute("data-value", "off");
         btnVideoToggle.setAttribute("title", "Turn on video");
-        btnVideoToggle.classList.remove("blue"); btnVideoToggle.classList.add("red");
+        btnVideoToggle.classList.remove("on-state"); btnVideoToggle.classList.add("off-state");
         btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
         btnVideoToggle.classList.remove("fa-video"); btnVideoToggle.classList.add("fa-video-slash");
 
@@ -554,7 +546,7 @@ async function ToggleAudio() {
     if (status === "off") {
         btnMicrophoneToggle.setAttribute("data-value", "on");
         btnMicrophoneToggle.setAttribute("title", "Turn off microphone");
-        btnMicrophoneToggle.classList.remove("red"); btnMicrophoneToggle.classList.add("blue");
+        btnMicrophoneToggle.classList.remove("off-state"); btnMicrophoneToggle.classList.add("on-state");
         btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
         btnMicrophoneToggle.classList.remove("fa-microphone-slash"); btnMicrophoneToggle.classList.add("fa-microphone");
 
@@ -566,7 +558,7 @@ async function ToggleAudio() {
 
         btnMicrophoneToggle.setAttribute("data-value", "off");
         btnMicrophoneToggle.setAttribute("title", "Turn on microphone");
-        btnMicrophoneToggle.classList.remove("blue"); btnMicrophoneToggle.classList.add("red");
+        btnMicrophoneToggle.classList.remove("on-state"); btnMicrophoneToggle.classList.add("off-state");
         btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
         btnMicrophoneToggle.classList.remove("fa-microphone"); btnMicrophoneToggle.classList.add("fa-microphone-slash");
 

@@ -117,14 +117,14 @@
 }
 
 .log-console {
-    height: 500px;
+    height: 300px;
     overflow-y: scroll
 }
 
-.red {
+.off-state {
     background-color: red
 }
 
-.blue {
+.on-state {
     background-color: blue
 }
