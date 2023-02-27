@@ -1,38 +1,47 @@
-﻿#participants {
-    width: 200px
-}
+﻿
 
-.video-card-holder {
-    text-align: center;
+#participants {
+   
 }
-
-    .video-card-holder h5 {
-        text-align: left !important;
-    }
 
 .video-card {
-    min-height: 200px;
-    width: 100%;
-    max-width: 320px;
-    margin-bottom: 20px;
-    margin-right: 10px;
+    width: 320px;
+    height: 200px;
+    min-width: 200px;
+    min-height: 87px;
     display: inline-block;
+    text-align: center;
+    padding: 10px;
+    margin: 10px;
+}
+
+.video-card-header {
+    text-align: left !important;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.video-card-content {
+   height:100%;
 }
 
 .video-panel {
-    height: 180px;
+   /* height: 200px;*/
+    height:100%;
     background-color: black;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
     overflow: hidden;
+    border: 1px solid black;
 }
 
-.toolbar {
+.video-panel-toolbar {
     background-color: silver;
     min-height: 33px;
     padding: 4px 8px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
+    background-image: linear-gradient(to bottom, black, #232023, #373737, #232023, black);
 }
 
 .toolbar-icon {
@@ -49,16 +58,29 @@
 .fa {
     color: white;
 }
-
 .media-control {
     height: 25px;
     cursor: pointer;
-    width: 50px;
+    min-width: 35px;
     border-radius: 5px;
-    margin-left: 10px;
-    padding-top: 4px;
+    margin-left: 3px;
+    padding:4px;
+    color: white;
 }
-
+    .media-control span {
+       /* possible text span block*/
+        font-family: serif !important;
+        display: inline-block;
+        margin-left: 5px;
+        font-size: 12px;
+        font-weight: 200;
+        line-height: 1;
+      
+        margin-left: 4px;
+    }
+    .media-control:hover{
+        color:silver;
+    }
 .active-control {
     background-color: #007bff;
 }
@@ -82,6 +104,14 @@
     margin-right: 25px;
 }
 
+.formal-section {
+    margin-top: 10px;
+    border: 1px solid black;
+    padding: 8px;
+    border-radius: 12px;
+    margin-right: 10px;
+    max-width: 350px;
+}
 
 .status-message {
     display: inline-block;
@@ -89,23 +119,10 @@
     font-size: smaller;
 }
 
-.formal-section {
-    margin-top: 10px;
-    border: 1px solid black;
-    padding: 8px;
-    border-radius: 5px;
-    margin-right: 10px;
-    max-width: 350px;
-}
-
 .matching-button {
     height: 25px;
     line-height: 1.0;
     margin-left: 15px;
-}
-
-.drag-bar {
-    cursor: move
 }
 
 .dropdown-area {
@@ -122,9 +139,9 @@
 }
 
 .off-state {
-    background-color: red
+    background-color: red !important
 }
 
 .on-state {
-    background-color: blue
+    background-color: blue !important
 }

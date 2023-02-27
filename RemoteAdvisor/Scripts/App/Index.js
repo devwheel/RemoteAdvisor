@@ -28,8 +28,10 @@ const btnHangup = document.getElementById("hang-up-button");
 const btnJoinCall = document.getElementById("video-button");
 const btnVideoToggle = document.getElementById("local-video-switch");
 const btnMicrophoneToggle = document.getElementById("local-microphone-switch");
+const btnCloseAddRemote = document.getElementById("btnCloseAddRemote");
+const btnAddRemote = document.getElementById("btnAddRemote");
 
-
+const localVideoToggler = document.getElementById("local-video-toggler");
 const localVideoElement = document.getElementById("video");
 const refreshElement = document.getElementById("refresh-participants");
 const loginButton = document.getElementById("btnLogin");
@@ -44,7 +46,7 @@ const dropdownCamera = document.getElementById("camera-list");
 const dropdownMicrophone = document.getElementById("mic-list");
 const dropdownSpeaker = document.getElementById("speaker-list");
 
-const groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2777';
+let groupId = '9fef326a-b48c-43e3-8ceb-a19025bc2777';
 
 document.addEventListener('DOMContentLoaded', startup);
 
@@ -120,7 +122,7 @@ async function GetToken() {
 //  Initialize the Call Client and the Call Agent for the Users
 //********************************************************************* */
 async function Init(token) {
-
+    
     LoadCookieSettings(); //Settings for last used devices
 
     //Create callClient and callAgent
@@ -152,17 +154,25 @@ async function Init(token) {
 
 }
 
-//********************************************************************* */
+// ********************************************************************* */
 //  Join the Meeting with Video
-//********************************************************************* */
+// ********************************************************************* */
 async function JoinVideo() {
     // Turn on Video if it is not there
     if (localVideoStream === undefined) {
         localVideoStream = new LocalVideoStream(activeCamera);
         await ToggleVideo(); //need to fix
     }
-    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: false } };
-    const context = { groupId: groupId };   //context of the call Group/Teams/Room/etc
+    const placeCallOptions = { videoOptions: { localVideoStreams: [localVideoStream] }, audioOptions: { muted: true } };
+
+    let customGroupId = $("#meetingId").val();
+    let context;
+    
+    if (customGroupId.indexOf("teams") > -1) {
+        context = { meetingLink: customGroupId };
+    } else {
+        context = { groupId: groupId };   //context of the call Group/Teams/Room/etc
+    }
 
     //Setup the call/meeting
     call = callAgent.join(context, placeCallOptions);
@@ -177,6 +187,7 @@ async function JoinVideo() {
     callinfoPanel.classList.remove("hidden");
 };
 
+// load devices into dropdowns for changing
 async function LoadDeviceDropdowns(deviceMgr) {
     //mobile device so don't setup dropdowns
     //get all the camera devices
@@ -359,6 +370,7 @@ async function DestroyLocalVideo() {
     localView = undefined;
 }
 
+// get the camera selected in the dropdown
 async function GetActiveCamera() {
     if (!isMobileBrowser) {
         let list = document.getElementById("camera-list");
@@ -372,6 +384,7 @@ async function GetActiveCamera() {
     }
 };
 
+// load settings from cookies
 function LoadCookieSettings() {
     //see if a different camera was set
     let cameraCheck = getCookie("camera");
@@ -391,6 +404,8 @@ function LoadCookieSettings() {
 
 };
 
+// Setup actions on all the buttons on the screen
+// Join Call, Refresh Participants, Change Camera, Change Microphone, Change Speaker
 function SetupListeners() {
 
     //join video
@@ -451,6 +466,7 @@ function SetupListeners() {
         participantPanel.classList.add("hidden");
         callinfoPanel.classList.add("hidden");
         ToggleVideo();
+        ToggleAudio();
         call.dispose();
         call = undefined;
         videoSwitch.classList.remove("active-control");
@@ -483,6 +499,19 @@ function SetupListeners() {
         }
 
     })
+
+    localVideoToggler.addEventListener("click", () => {
+        console.log("local video toggler");
+        MoveLocalVideo();
+    })
+
+    
+    btnAddRemote.addEventListener("click", () => {
+        let modal = document.getElementById("contact-modal");
+        modal.modal("hide");
+
+
+    });
 
 };
 
@@ -541,6 +570,7 @@ async function ToggleVideo() {
     btnVideoToggle.removeAttribute("disabled"); //re-activate
 };
 
+// toggle audio sets the action on the button
 async function ToggleAudio() {
     let status = btnMicrophoneToggle.getAttribute("data-value");
     if (status === "off") {
@@ -570,6 +600,7 @@ async function ToggleAudio() {
     }
 }
 
+// update the UX for the call state
 async function ShowCallState(e) {
     //  let icon = "<i class='fas fa-phone-alt'></i>";
     //might do something here later
@@ -610,6 +641,7 @@ async function ShowCallState(e) {
     }
 };
 
+// Show the participants connected to the call
 async function ShowParticipantList() {
 
     let partElement = document.getElementById('participants');
@@ -647,7 +679,7 @@ async function ShowParticipantList() {
     }
 };
 
-
+// Update the UX with the remote participant name
 function UpdateRemoteParticipantName(userId, name) {
     document.getElementById("remote-name-" + userId).innerHTML = name;
 };
@@ -809,7 +841,6 @@ async function subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream
             DestroyRemoteParticipantVideo(id);
         }
     });
-
     // Participant has video on initially.
     if (remoteVideoStream.isAvailable) {
         let id = GetId(remoteParticipant.identifier.communicationUserId);
@@ -851,6 +882,17 @@ function isMobileBrowser() {
     LogConsole("Mobile Browser: is " + a);
     return a;
 }
+
+function MoveLocalVideo() {
+    let localPanel = document.getElementById("local-panel");
+    localPanel.style.position = "absolute";
+    localPanel.style.top = "0px";
+    localPanel.style.right = "0px";
+    localPanel.style.width = "200px";
+    localPanel.style.height = "87px";
+
+}
+
 
 export { getCookie, setCookie };
 

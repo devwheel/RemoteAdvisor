@@ -8,8 +8,14 @@ namespace RemoteAdvisor.Controllers
 {
     public class HomeController : Controller
     {
-        public ActionResult Index()
+        public ActionResult Index(string id = "")
         {
+            string meetingid = Guid.NewGuid().ToString();
+            if (id == "")
+            {
+                id = meetingid;
+            }   
+            ViewBag.MeetingId = id;
             return View();
         }
         public ActionResult TestPage()

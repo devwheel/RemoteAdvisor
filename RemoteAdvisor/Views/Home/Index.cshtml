@@ -8,17 +8,16 @@
 <head>
     <title>Remote Advisor</title>
     <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    @*<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>*@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
     <link href="/Content/Join.css" rel="stylesheet" />
     <style>
-      
     </style>
 </head>
 <body>
@@ -27,35 +26,42 @@
         <div id="play"></div>
         <h4>Azure Communication Services</h4>
         <h1>Calling Asp.Net Quickstart</h1>
+        <div class="d-flex">
+            <div><h4>Meeting Id</h4></div>
+            <div class="ms-2"><input type="text" id="meetingId" value="@ViewBag.MeetingId" class="form-control" /></div>
+        </div>
         <div id="call-panel" class="hidden">
             <!-- panels for video display -->
             <div class="row" id="remote-displays">
                 <!-- Local Video Preview-->
-                <div id="local-panel" class="col-5 formal-section video-card-holder draggable">
-                    <h5 class="drag-bar">My Video Preview</h5>
-                    <div class="video-card">
-                        <div id="video" class="video-panel"></div>
-                        <div id="video-bar" class="toolbar">
-                            <div id="toolbar" class="d-flex flex-wrap">
-                                <div id="local-video-switch" class="media-control text-center off-state fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
-                                <span style="width:10px"></span>
-                                <div id="local-microphone-switch" class="media-control text-center off-state fa fa-microphone-slash" data-value="off" title="Turn on Microphone">
+                <div class="formal-section">
+                    <h5>Participants</h5>
+                    <div id="local-panel" class="video-card">
+                        <div class="video-card-header">My Video Preview</div>
+                        <div class="video-card-content">
+                            <div id="video" class="video-panel"></div>
+                            <div id="video-bar" class="video-panel-toolbar">
+                                <div id="toolbar" class="d-flex flex-wrap">
+                                    <div id="local-video-switch" class="media-control text-center off-state fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
+                                    <div id="local-microphone-switch" class="media-control text-center off-state fas fa-microphone-slash" data-value="off" title="Turn on Microphone"></div>
+                                    <div id="video-button" class="on-state media-control text-center hidden fa fa-phone me-2"><span>Connect</span></div>
+                                    <div id="hang-up-button" class="off-state media-control text-center hidden fas fa-phone-slash"><span>Hang Up</span></div>
+                                    <div id="local-video-toggler" class="media-control text-center off-state fas fa-expand-arrows-alt" data-value="off" title="View Small Local Window"></div>
+                                    <div id="invite-remote-button" class="media-control text-center off-state fa fa-user-plus" data-value="off" data-bs-target="#contact-modal" data-bs-toggle="modal" title="Invite Mobile Pariticipant"></div>
                                 </div>
-                                <button id="video-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Connect</button>
-                                <button id="hang-up-button" type="button" class="btn btn-sm btn-primary matching-button hidden">Hang Up</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Device Selector and Remote Participant List -->
         <div id="media-selectors" class="row">
             <div class="col-5 formal-section">
                 <h5>Call Devices</h5>
                 <div id="device-list" class="col hidden">
-                    <div id="cameras" class="dropdown-area" >
+                    <div id="cameras" class="dropdown-area">
                         <label labelfor="camera-list">
                             Cameras
                             <select id="camera-list" class="form-select">
@@ -126,9 +132,9 @@
                 <div id="console-out" class="log-console hidden"></div>
             </div>
         </div>
-        </div>
+    </div>
     <!--Modal Dialog-->
-    <div class="modal" id="modal-login" tabindex="-1" role="dialog"  data-bs-keyboard="false" data-bs-backdrop="static">
+    <div class="modal" id="modal-login" tabindex="-1" role="dialog" data-bs-keyboard="false" data-bs-backdrop="static">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -154,10 +160,68 @@
     <input type="hidden" id="token-expires" />
     <input type="hidden" id="userid" />
     <input type="hidden" id="email" />
+
+    <div id="contact-modal" class="modal fade" role="dialog" aria-labelledby="groupModal" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered video">
+            <div class="modal-content">
+                <div class="modal-header" style="font-weight:bolder; font-size:larger; color:black">
+                    Add Client to Session
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <div class="float-left">
+                            <div>
+                                <h5>Client Name:</h5>
+                                <input id="client-name" class="form-control type-ahead-name" autocomplete="off" placeholder="Type client's name" />
+                                <div style="height:20px"></div>
+                                <h5>Client Cell#:</h5>
+                                <input id="client-cell" class="form-control" />
+
+                            </div>
+                            <div id="added-names"></div>
+                        </div>
+                    </div>
+
+                    <div class="clearfix"></div>
+                    <hr />
+                </div>
+                <div class="modal-footer">
+                    <button id="btnCloseAddRemote" class="btn btn-secondary" data-bs-dismiss="modal" >Cancel</button>
+                    <button id="btnAddRemote" class="btn btn-secondary" onclick="AddClientToSession()" >Invite</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="~/Scripts/App/Bundle.js?ver=1234"></script>
     <script>
+        function AddClientToSession() {
+            $("#contact-modal").modal("hide");
 
- 
+            var contact = new Object();
+            contact.ToClient = $("#client-name").val();
+            contact.ToCellNumber = $("#client-cell").val();
+            contact.MeetingId = $("#meetingId").val();
+            console.log(contact)
+            return;
+
+            $.ajax({
+                url: '/api/sms/invite',
+                cache: false,
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                data: JSON.stringify(contact),
+                success: function (data) {
+                    console.log(data);
+                },
+                error: function (a, b, c) {
+                    alert(a);
+                    var c = a;
+                }
+            });
+        }
+
     </script>
 
 

@@ -53,6 +53,9 @@
     <Reference Include="Azure.Communication.Identity, Version=1.2.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
       <HintPath>..\packages\Azure.Communication.Identity.1.2.0\lib\netstandard2.0\Azure.Communication.Identity.dll</HintPath>
     </Reference>
+    <Reference Include="Azure.Communication.Sms, Version=1.0.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
+      <HintPath>..\packages\Azure.Communication.Sms.1.0.1\lib\netstandard2.0\Azure.Communication.Sms.dll</HintPath>
+    </Reference>
     <Reference Include="Azure.Core, Version=1.27.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
       <HintPath>..\packages\Azure.Core.1.27.0\lib\net461\Azure.Core.dll</HintPath>
     </Reference>
@@ -219,10 +222,14 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\ACSAuthController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\SMSController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\ACSUser.cs" />
+    <Compile Include="Models\Extensions.cs" />
+    <Compile Include="Models\Providers\SmsProvider.cs" />
+    <Compile Include="Models\SmsRequest.cs" />
     <Compile Include="Models\TokenRequestResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
