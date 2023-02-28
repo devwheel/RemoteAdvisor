@@ -52,12 +52,9 @@
 }
 
 .hidden {
-    display: none
+    display: none !important;
 }
 
-.fa {
-    color: white;
-}
 .media-control {
     height: 25px;
     cursor: pointer;
@@ -83,6 +80,25 @@
     }
 .active-control {
     background-color: #007bff;
+}
+
+.small-preview{
+    position:absolute;
+    top:0px;
+    right:20px;
+    width:200px;
+    height:87px;
+}
+
+.screenshare-panel {
+    border: 1px solid #373737;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 400px;
+    width: 600px;
+    background-color: white;
+    z-index: 20000;
 }
 
 .inactive-control {

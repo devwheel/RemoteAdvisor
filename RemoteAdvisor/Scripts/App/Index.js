@@ -15,6 +15,7 @@ let cameras;
 let activeCamera;
 let rendererLocal;
 let rendererRemote;
+let rendererScreenshare;
 let microphones;
 let speakers;
 let showLogs = false;
@@ -28,8 +29,7 @@ const btnHangup = document.getElementById("hang-up-button");
 const btnJoinCall = document.getElementById("video-button");
 const btnVideoToggle = document.getElementById("local-video-switch");
 const btnMicrophoneToggle = document.getElementById("local-microphone-switch");
-const btnCloseAddRemote = document.getElementById("btnCloseAddRemote");
-const btnAddRemote = document.getElementById("btnAddRemote");
+const btnShare = document.getElementById("btn-share");
 
 const localVideoToggler = document.getElementById("local-video-toggler");
 const localVideoElement = document.getElementById("video");
@@ -183,8 +183,8 @@ async function JoinVideo() {
     await ShowCallState(call);  //Connecting..=> connected
     ShowParticipantList();
     //UX Settings for a connected call
-    participantPanel.classList.remove("hidden");
-    callinfoPanel.classList.remove("hidden");
+  
+    ActivateCallDependantElements();
 };
 
 // load devices into dropdowns for changing
@@ -250,6 +250,7 @@ async function LoadDeviceDropdowns(deviceMgr) {
     SetupListeners();
     document.getElementById("device-list-loading").classList.add("hidden");
     document.getElementById("device-list").classList.remove("hidden");
+    document.getElementById("toolbar").classList.remove("hidden");
 }
 
 async function DisplayLocalVideo() {
@@ -285,6 +286,17 @@ async function DisplayRemoteVideo(id, remoteStream) {
 
 
     }
+}
+
+async function DisplayRemoteScreenshare(remoteStream) {
+    let elId = `screen-share-content`;
+    LogConsole(`Trying to display Screen Share at ${elId}`);
+    if (rendererScreenshare === undefined)
+        rendererScreenshare = new VideoStreamRenderer(remoteStream);
+
+    let viewScreenShare = await rendererScreenshare.createView();
+    let el = document.getElementById(elId);
+    el.appendChild(viewScreenShare.target);
 }
 
 async function CreateRemoteParticipantElement(id, userName) {
@@ -358,7 +370,16 @@ function DestroyRemoteParticipantVideo(id) {
             videoNode.removeChild(videoNode.lastElementChild);
         }
     }
+}
 
+function DestroyScreenSharing(id) {
+    let videoNode = document.getElementById(id);
+    if (videoNode !== null) {
+        //Check on all participants as the person muting video would fail here
+        while (videoNode.lastElementChild) {
+            videoNode.removeChild(videoNode.lastElementChild);
+        }
+    }
 }
 
 async function DestroyLocalVideo() {
@@ -366,8 +387,10 @@ async function DestroyLocalVideo() {
     while (video.lastElementChild) {
         video.removeChild(video.lastElementChild);
     }
-    localView.dispose();
-    localView = undefined;
+    if (localView !== undefined) {
+        localView.dispose();
+        localView = undefined;
+    }
 }
 
 // get the camera selected in the dropdown
@@ -500,10 +523,11 @@ function SetupListeners() {
 
     })
 
-    localVideoToggler.addEventListener("click", () => {
-        console.log("local video toggler");
-        MoveLocalVideo();
+    localVideoToggler.addEventListener("click",async () => {
+        var newState = await ToggleResizePreview();
+        
     })
+
 
     
     btnAddRemote.addEventListener("click", () => {
@@ -513,21 +537,60 @@ function SetupListeners() {
 
     });
 
+    btnShare.addEventListener("click", async () => {
+        await ToggleShare();
+        if (call !== undefined) {
+            await call.startScreenSharing();
+        }
+        if (call !== undefined) {
+            await call.stopScreenSharing();
+        }
+    });
+
 };
+
+function ToggleMediaElement(el) {
+    let elState = el.getAttribute("data-state");
+    let faAttrOff; let faAttrOn; let titleOff; let titleOn;
+    let classOff; let classOffTarget;
+    faAttrOff = el.getAttribute("data-off");
+    faAttrOn = el.getAttribute("data-on");
+    titleOn = el.getAttribute("data-offTitle");
+    titleOff = el.getAttribute("data-onTitle");
+    classOff = el.getAttribute("data-offClass");
+    classOffTarget = el.getAttribute("data-offClassTarget");
+
+    if (elState === "on") {
+        el.setAttribute("data-state", "off");
+        el.classList.remove("on-state"); el.classList.add("off-state");
+        el.classList.remove(faAttrOn); el.classList.add(faAttrOff);
+        el.setAttribute("title", titleOff);
+        if (classOff !== null && classOffTarget != null) {
+            let targetEl = document.getElementById(classOffTarget);
+            targetEl.classList.remove(classOff);
+        }
+        return "off";
+    }
+    else {
+        el.setAttribute("data-state", "on");
+        el.classList.remove("off-state"); el.classList.add("on-state");
+        el.classList.remove(faAttrOff); el.classList.add(faAttrOn);
+        el.setAttribute("title", titleOn);
+        if (classOff !== null && classOffTarget != null) {
+            let targetEl = document.getElementById(classOffTarget);
+            targetEl.classList.add(classOff);
+        }
+       
+        return "on";
+    }
+    
+}
 
 // toggle video sets the action on the button
 // and the UX state
 async function ToggleVideo() {
-    let currentValue = btnVideoToggle.getAttribute("data-value");
-    btnVideoToggle.setAttribute("disabled", "disabled"); //deactivate for the moment
-    if (currentValue === 'off') {
-        //UX Element State - Change to on:  Blue and Video and on data-value
-        btnVideoToggle.setAttribute("data-value", "on");
-        btnVideoToggle.setAttribute("title", "Turn off video");
-        btnVideoToggle.classList.remove("off-state"); btnVideoToggle.classList.add("on-state");
-        btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnVideoToggle.classList.remove("fa-video-slash"); btnVideoToggle.classList.add("fa-video");
-
+    var newState = await ToggleMediaElement(btnVideoToggle);
+    if (newState === 'on') {
         if (localVideoStream === undefined) {
             localVideoStream = await DisplayLocalVideo();
         }
@@ -545,15 +608,6 @@ async function ToggleVideo() {
             }
         }
     } else {
-        //turn off video
-        //UX Element State - Change to off:  Red and Video-Slas and off data-value
-        btnVideoToggle.setAttribute("data-value", "off");
-        btnVideoToggle.setAttribute("title", "Turn on video");
-        btnVideoToggle.classList.remove("on-state"); btnVideoToggle.classList.add("off-state");
-        btnVideoToggle.classList.remove("fas"); btnVideoToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnVideoToggle.classList.remove("fa-video"); btnVideoToggle.classList.add("fa-video-slash");
-
-
         try {
             if (call !== undefined && call !== null) {
                 LogConsole("isLocalVideoStarted", call.isLocalVideoStarted)
@@ -572,32 +626,26 @@ async function ToggleVideo() {
 
 // toggle audio sets the action on the button
 async function ToggleAudio() {
-    let status = btnMicrophoneToggle.getAttribute("data-value");
-    if (status === "off") {
-        btnMicrophoneToggle.setAttribute("data-value", "on");
-        btnMicrophoneToggle.setAttribute("title", "Turn off microphone");
-        btnMicrophoneToggle.classList.remove("off-state"); btnMicrophoneToggle.classList.add("on-state");
-        btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnMicrophoneToggle.classList.remove("fa-microphone-slash"); btnMicrophoneToggle.classList.add("fa-microphone");
-
-        if (call !== undefined) {
+    var newState = await ToggleMediaElement(btnMicrophoneToggle);
+    if (call !== undefined) {
+        if (newState === "on") {
             LogConsole("unmute call");
             call.unmute();
-        }
-    } else {
-
-        btnMicrophoneToggle.setAttribute("data-value", "off");
-        btnMicrophoneToggle.setAttribute("title", "Turn on microphone");
-        btnMicrophoneToggle.classList.remove("on-state"); btnMicrophoneToggle.classList.add("off-state");
-        btnMicrophoneToggle.classList.remove("fas"); btnMicrophoneToggle.classList.add("fas"); //get in the right order for fontawesome??
-        btnMicrophoneToggle.classList.remove("fa-microphone"); btnMicrophoneToggle.classList.add("fa-microphone-slash");
-
-        if (call !== undefined) {
+        } else {
             LogConsole("mute call");
             call.mute();
         }
-
     }
+}
+
+async function ToggleShare() {
+    ToggleMediaElement(btnMicrophoneToggle);
+    return;
+}
+
+async function ToggleResizePreview() {
+    var newState = ToggleMediaElement(localVideoToggler);
+
 }
 
 // update the UX for the call state
@@ -703,18 +751,22 @@ function GetUserEmail() {
 }
 
 function GetId(data) {
-    let array = data.split(':');
-    let len = array.length;
-    return array[len - 1];
+    if (data !== undefined) {
+        console.log("data", data);
+        let array = data.split(':');
+        let len = array.length;
+        return array[len - 1];
+    }
+    else { return 'no-id'; }
 };
 
-async function Login() {
-    let name = document.getElementById("user-name").value;
-    setCookie("name", name);
-    document.getElementById("call-panel").classList.remove("hidden");
-    $('#modal-login').modal('hide');
-    await Init();
-};
+function ActivateCallDependantElements() {
+    let callElements = document.getElementsByClassName("call-dependant");
+    for (let callElement in callElements) {
+        console.log(callElement.id);
+        //callElement.classList.remove("hidden");
+    }
+}
 
 // Subscribe to a call obj.
 // Listen for property changes and collection updates.
@@ -800,7 +852,7 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
 
         // Inspect the remoteParticipants current videoStreams and subscribe to them.
         remoteParticipant.videoStreams.forEach(async (remoteVideoStream) => {
-            await subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream)
+            await subscribeToRemoteVideoStream(remoteParticipant)
         });
         // Subscribe to the remoteParticipant's 'videoStreamsUpdated' event to be
         // notified when the remoteParticipant adds new videoStreams and removes video streams.
@@ -808,7 +860,7 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
             // Subscribe to new remote participant's video streams that were added.
             e.added.forEach(async (remoteVideoStream) => {
                 LogConsole("subscribing to remote video stream");
-                await subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream);
+                await subscribeToRemoteVideoStream(remoteParticipant);
 
             });
             // Unsubscribe from remote participant's video streams that were removed.
@@ -826,21 +878,44 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
 // Subscribe to a remote participant's remote video stream obj.
 // Listen for property changes and collection updates.
 // When their remote video streams become available, display them in the UI.
-async function subscribeToRemoteVideoStream(remoteParticipant, remoteVideoStream) {
+async function subscribeToRemoteVideoStream(remoteParticipant) {
+    let remoteVideoStream = remoteParticipant.videoStreams.find(function (s) { return s.mediaStreamType === "Video" });
+    let screenShareStream = remoteParticipant.videoStreams.find(function (s) { return s.mediaStreamType === "ScreenSharing" });
+    let id = GetId(remoteParticipant.identifier.communicationUserId);
+
     remoteVideoStream.on('isAvailableChanged', async () => {
-        let id = GetId(remoteParticipant.identifier.communicationUserId);
         LogConsole(`visibility changed for ${id}`, remoteVideoStream.isAvailable);
         // Participant has switched video on.
         if (remoteVideoStream.isAvailable) {
             LogConsole("remote participant is now available for " + remoteParticipant.displayName, remoteParticipant);
-            //await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
-            await DisplayRemoteVideo(id, remoteVideoStream);
+            console.log(remoteVideoStream.mediaStreamType);
+            //remote stream is video - put in video element
+            if (remoteVideoStream.mediaStreamType === "Video") {
+                await DisplayRemoteVideo(id, remoteVideoStream);
+            }
 
             // Participant has switched video off.
         } else {
             DestroyRemoteParticipantVideo(id);
         }
     });
+    screenShareStream.on('isAvailableChanged', async () => {
+        LogConsole(`visibility changed for ${id}`, screenShareStream.isAvailable);
+        // Participant has switched video on.
+        if (screenShareStream.isAvailable) {
+            LogConsole("remote participant is now available for " + remoteParticipant.displayName, remoteParticipant);
+            console.log(screenShareStream.mediaStreamType);
+            //remote stream is screen share - put in screen share element
+            if (screenShareStream.mediaStreamType === "ScreenSharing") {
+                await DisplayRemoteScreenshare(screenShareStream);
+            }
+
+            // Participant has stopped sharing video
+        } else {
+            DestroyScreenSharing("screen-share-content");
+        }
+    });
+
     // Participant has video on initially.
     if (remoteVideoStream.isAvailable) {
         let id = GetId(remoteParticipant.identifier.communicationUserId);
@@ -882,17 +957,6 @@ function isMobileBrowser() {
     LogConsole("Mobile Browser: is " + a);
     return a;
 }
-
-function MoveLocalVideo() {
-    let localPanel = document.getElementById("local-panel");
-    localPanel.style.position = "absolute";
-    localPanel.style.top = "0px";
-    localPanel.style.right = "0px";
-    localPanel.style.width = "200px";
-    localPanel.style.height = "87px";
-
-}
-
 
 export { getCookie, setCookie };
 

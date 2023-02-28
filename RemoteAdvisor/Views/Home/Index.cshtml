@@ -7,16 +7,18 @@
 <html>
 <head>
     <title>Remote Advisor</title>
-    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/Content/controls.css">
+    <link rel="stylesheet" href="/Content/Join.css">
+    
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
-    <link href="/Content/controls.css" crossorigin="anonymous" rel="stylesheet">
-    <link href="/Content/Join.css" rel="stylesheet" />
     <style>
     </style>
 </head>
@@ -41,13 +43,14 @@
                         <div class="video-card-content">
                             <div id="video" class="video-panel"></div>
                             <div id="video-bar" class="video-panel-toolbar">
-                                <div id="toolbar" class="d-flex flex-wrap">
-                                    <div id="local-video-switch" class="media-control text-center off-state fa fa-video-slash" data-value="off" title="Turn on Camera"></div>
-                                    <div id="local-microphone-switch" class="media-control text-center off-state fas fa-microphone-slash" data-value="off" title="Turn on Microphone"></div>
-                                    <div id="video-button" class="on-state media-control text-center hidden fa fa-phone me-2"><span>Connect</span></div>
-                                    <div id="hang-up-button" class="off-state media-control text-center hidden fas fa-phone-slash"><span>Hang Up</span></div>
-                                    <div id="local-video-toggler" class="media-control text-center off-state fas fa-expand-arrows-alt" data-value="off" title="View Small Local Window"></div>
-                                    <div id="invite-remote-button" class="media-control text-center off-state fa fa-user-plus" data-value="off" data-bs-target="#contact-modal" data-bs-toggle="modal" title="Invite Mobile Pariticipant"></div>
+                                <div id="toolbar" class="d-flex flex-wrap hidden">
+                                    <div id="local-video-switch" class="media-control off-state fa fa-video-slash" data-state="off" title="Turn on Camera" data-on="fa-video" data-off="fa-video-slash" data-onTitle="Turn on Camera" data-offTitle="Turn off Camera"></div>
+                                    <div id="local-microphone-switch" class="media-control off-state fas fa-microphone-slash" data-state="off" title="Turn on Microphone" data-on="fa-microphone" data-off="fa-microphone-slash" data-onTitle="Turn on Microphone" data-offTitle="Turn off Microphone"></div>
+                                    <div id="video-button" class="on-state media-control hidden fas fa-phone" data-state="off"><span>Connect</span></div>
+                                    <div id="hang-up-button" class="off-state media-control hidden fas fa-phone-slash"><span>Hang Up</span></div>
+                                    <div id="local-video-toggler" class="media-control off-state fas fa-expand-arrows-alt call-dependant hidden" data-state="off" title="View small preview window" data-on="fa-window-restore" data-off="fa-expand-arrows-alt" data-offClass="small-preview" data-offClassTarget="local-panel" data-onTitle="Restore local preview window" data-offTitle="Reduce local preview window"></div>
+                                    <div id="invite-remote-button" class="media-control on-state fas fa-user-plus call-dependant hidden" data-state="on" data-bs-target="#contact-modal" data-bs-toggle="modal" title="Invite Mobile Pariticipant"></div>
+                                    <div id="btn-share" class="media-control off-state fas fa-share-square call-dependant hidden" data-state="off" title="Start sharing" data-on="fas fa-times" data-off="fas fa-share-square" data-onTitle="" data-offTitle=""></div>
                                 </div>
                             </div>
                         </div>
@@ -89,7 +92,7 @@
                 </div>
             </div>
 
-            <div id="participant-panel" class="col-5 formal-section hidden">
+            <div id="participant-panel" class="col-5 formal-section call-dependant hidden">
                 <div id="partipant-list">
                     <div class="col">
                         <h5>
@@ -102,7 +105,7 @@
             </div>
         </div>
         <!-- Call Status and Remote Participant Counts -->
-        <div id="call-info" class="row hidden">
+        <div id="call-info" class="row call-dependant hidden">
             <div class="col-5 formal-section">
                 <h5>Call Status</h5>
                 <div id="status-bar1" class="col-5">
@@ -155,6 +158,12 @@
         </div>
     </div>
     <div id="root"></div>
+    <div id="screen-share" class="draggable screenshare-panel call-dependant hidden">
+        <div id="screen-share-title" style="border:1px solid #373737;cursor:move">Screen Share</div>
+        <div id="screen-share-content"></div>
+        <div id="screen-share-toolbar">
+        </div>
+    </div>
     <input type="hidden" id="login-name" />
     <input type="hidden" id="token" />
     <input type="hidden" id="token-expires" />
@@ -196,6 +205,8 @@
 
     <script src="~/Scripts/App/Bundle.js?ver=1234"></script>
     <script>
+        $(".draggable").draggable();
+        $(".draggable").show();
         function AddClientToSession() {
             $("#contact-modal").modal("hide");
 
