@@ -158,7 +158,7 @@
         </div>
     </div>
     <div id="root"></div>
-    <div id="screen-share" class="draggable screenshare-panel call-dependant hidden">
+    <div id="screen-share" class="draggable screenshare-panel hidden">
         <div id="screen-share-title" style="border:1px solid #373737;cursor:move">Screen Share</div>
         <div id="screen-share-content"></div>
         <div id="screen-share-toolbar">
@@ -202,20 +202,22 @@
         </div>
     </div>
 
-
     <script src="~/Scripts/App/Bundle.js?ver=1234"></script>
     <script>
         $(".draggable").draggable();
         $(".draggable").show();
-        function AddClientToSession() {
-            $("#contact-modal").modal("hide");
+        var inviteModal = document.getElementById('contact-modal')
+        var contactName = document.getElementById('client-name')
+        inviteModal.addEventListener('shown.bs.modal', function () {
+            contactName.focus()
+        })
 
+        function AddClientToSession() {
             var contact = new Object();
             contact.ToClient = $("#client-name").val();
             contact.ToCellNumber = $("#client-cell").val();
             contact.MeetingId = $("#meetingId").val();
-            console.log(contact)
-            return;
+           
 
             $.ajax({
                 url: '/api/sms/invite',
@@ -225,6 +227,7 @@
                 data: JSON.stringify(contact),
                 success: function (data) {
                     console.log(data);
+                    inviteModal.hide();
                 },
                 error: function (a, b, c) {
                     alert(a);

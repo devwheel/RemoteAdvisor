@@ -78,9 +78,6 @@
     .media-control:hover{
         color:silver;
     }
-.active-control {
-    background-color: #007bff;
-}
 
 .small-preview{
     position:absolute;
@@ -99,10 +96,7 @@
     width: 600px;
     background-color: white;
     z-index: 20000;
-}
 
-.inactive-control {
-    background-color: #5AAAFF
 }
 
 #status-bar {
@@ -155,9 +149,20 @@
 }
 
 .off-state {
-    background-color: red !important
+    background-color: red !important;
+    background-image: linear-gradient(to bottom, #8b0000, #b22222, #dc143c, #b22222, #8b0000 );
 }
 
 .on-state {
-    background-color: blue !important
+    background-color: blue !important;
+    background-image: linear-gradient(to bottom, #000080, #00008b, #0000cd, #00008b, #000080);
+}
+.active-control {
+    background-color: #007bff;
+  
+}
+
+.inactive-control {
+    background-color: #5AAAFF;
+ 
 }

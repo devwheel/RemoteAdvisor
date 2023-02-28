@@ -41,6 +41,7 @@ const participantPanel = document.getElementById("participant-panel");
 const participantCount = document.getElementById("call-participants");
 const callState = document.getElementById("call-state");
 const showLogsButton = document.getElementById("show-logs");
+const screenSharePanel = document.getElementById("screen-share");
 
 const dropdownCamera = document.getElementById("camera-list");
 const dropdownMicrophone = document.getElementById("mic-list");
@@ -291,6 +292,7 @@ async function DisplayRemoteVideo(id, remoteStream) {
 async function DisplayRemoteScreenshare(remoteStream) {
     let elId = `screen-share-content`;
     LogConsole(`Trying to display Screen Share at ${elId}`);
+    screenSharePanel.classList.remove("hidden");
     if (rendererScreenshare === undefined)
         rendererScreenshare = new VideoStreamRenderer(remoteStream);
 
@@ -380,6 +382,7 @@ function DestroyScreenSharing(id) {
             videoNode.removeChild(videoNode.lastElementChild);
         }
     }
+    screenSharePanel.classList.add("hidden");
 }
 
 async function DestroyLocalVideo() {
@@ -530,12 +533,12 @@ function SetupListeners() {
 
 
     
-    btnAddRemote.addEventListener("click", () => {
-        let modal = document.getElementById("contact-modal");
-        modal.modal("hide");
+    //btnAddRemote.addEventListener("click", () => {
+    //    let modal = document.getElementById("contact-modal");
+    //    modal.modal("hide");
 
 
-    });
+    //});
 
     btnShare.addEventListener("click", async () => {
         await ToggleShare();
@@ -762,10 +765,10 @@ function GetId(data) {
 
 function ActivateCallDependantElements() {
     let callElements = document.getElementsByClassName("call-dependant");
-    for (let callElement in callElements) {
-        console.log(callElement.id);
-        //callElement.classList.remove("hidden");
+    for (var i = 0; i < callElements.length; i++) {
+        callElements[i].classList.remove("hidden");
     }
+  
 }
 
 // Subscribe to a call obj.
