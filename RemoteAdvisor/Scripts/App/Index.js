@@ -215,10 +215,10 @@ async function LoadDeviceDropdowns(deviceMgr) {
         i++;
     });
 
-    LogConsole(`isMobileBrowser=${isMobileBrowser === false}`);
+    LogConsole(`isMobileBrowser=${isMobileBrowser() === false}`);
 
 
-    if (isMobileBrowser === false) {
+    if (isMobileBrowser() === false) {
 
         //get all the speakers
         speakers = await deviceMgr.getSpeakers();
