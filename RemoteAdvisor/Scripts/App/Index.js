@@ -30,7 +30,11 @@ const btnJoinCall = document.getElementById("video-button");
 const btnVideoToggle = document.getElementById("local-video-switch");
 const btnMicrophoneToggle = document.getElementById("local-microphone-switch");
 const btnShare = document.getElementById("btn-share");
+const btnAddRemote = document.getElementById("btnAddRemote");
+const btnAddTeams = document.getElementById("add-teams");
 
+const loginModal = new bootstrap.Modal(document.getElementById("modal-login")); //capture name for primary user
+const inviteModal = new bootstrap.Modal(document.getElementById("contact-modal"));  //capture name/cell to invite
 const localVideoToggler = document.getElementById("local-video-toggler");
 const localVideoElement = document.getElementById("video");
 const refreshElement = document.getElementById("refresh-participants");
@@ -55,24 +59,17 @@ loginButton.addEventListener("click", async () => LoginOK(), false);  //Login
 
 async function startup() {
 
-    $('#modal-login').on('shown.bs.modal', function () {
-        $('#user-name').trigger('focus')
-    })
-
     let name = GetUserName();
     LogConsole("name: " + name)
-    let id = GetUserId();
-    let email = GetUserEmail();
 
     if (name === null || name === '') {
-        $('#modal-login').modal('show');
+        loginModal.show();
         return;
     } else {
 
         $("#call-panel").removeClass("hidden");
     }
     $("#userid").val(getCookie("acsuserid"));
-    $("#email").val(getCookie("email"));
     $("#login-name").val(name);
     $("#token").val(getCookie("token"));
     $("#token-expires").val(getCookie("expires"));
@@ -83,11 +80,9 @@ async function startup() {
 }
 
 async function LoginOK() {
-    $('#modal-login').modal('hide');
+    loginModal.hide();
     setCookie("name", $("#user-name").val());
-    let tokenResponse = await GetToken();
-    await Init(tokenResponse.Token);
-
+    await startup()
 }
 
 async function GetToken() {
@@ -144,15 +139,8 @@ async function Init(token) {
 
     //Load Device Dropdowns with Devices
     await LoadDeviceDropdowns(deviceManager);
-
-
-    // Turn on Video if it is not there
-    if (isMobileBrowser() === false)
-        activeCamera = await GetActiveCamera();
-    LogConsole("We have an active camera", activeCamera);
-
+ 
     btnJoinCall.classList.remove("hidden");
-
 }
 
 // ********************************************************************* */
@@ -197,15 +185,19 @@ async function LoadDeviceDropdowns(deviceMgr) {
     //add the cameras to the dropdown list
     let i = 0;
     cameras.forEach(camera => {
+        console.log(camera);
         let option = document.createElement('option');
-        option.value = camera.id;
+        option.value = GetId(camera.id);
+        option.setAttribute("data-id", camera.id);
         option.innerHTML = camera.name.replace(/ *\([^)]*\) */g, "");
-        if (camera.id === lastCamera) {
-            option.selected = true;
-        }
         dropdownCamera.appendChild(option);
         i++;
     });
+
+    dropdownCamera.selectedIndex = lastCamera;
+
+    activeCamera = GetActiveCamera();
+    LogConsole(`[LoadDeviceDropdowns] init last camera name = ${activeCamera.name}`);
 
     //get all the mics
     microphones = await deviceMgr.getMicrophones();
@@ -223,8 +215,10 @@ async function LoadDeviceDropdowns(deviceMgr) {
         i++;
     });
 
+    LogConsole(`isMobileBrowser=${isMobileBrowser === false}`);
 
-    if (isMobileBrowser == false) {
+
+    if (isMobileBrowser === false) {
 
         //get all the speakers
         speakers = await deviceMgr.getSpeakers();
@@ -242,13 +236,13 @@ async function LoadDeviceDropdowns(deviceMgr) {
             i++;
         });
         document.getElementById("speakers").classList.remove("hidden");
-    } else {
-        activeCamera = cameras[0];
-        LogConsole("camera: " + activeCamera.name);
+    } else
+    {
+
         document.getElementById("speakers").classList.add("hidden");
 
     }
-    SetupListeners();
+    await SetupListeners();
     document.getElementById("device-list-loading").classList.add("hidden");
     document.getElementById("device-list").classList.remove("hidden");
     document.getElementById("toolbar").classList.remove("hidden");
@@ -258,6 +252,7 @@ async function DisplayLocalVideo() {
     if (localView === undefined) {
         if (localVideoStream === undefined) {
             activeCamera = await GetActiveCamera();
+            LogConsole(`[displaylocalvidoe] We have an active camera ${activeCamera.name}`, activeCamera);
             localVideoStream = new LocalVideoStream(activeCamera);
         }
         rendererLocal = new VideoStreamRenderer(localVideoStream);
@@ -265,28 +260,98 @@ async function DisplayLocalVideo() {
         localVideoElement.appendChild(localView.target);
         return localVideoStream;
     }
+    else {
+        alert('local video already exists');
+    }
+};
+
+async function CreateRemoteParticipantElement(id, userName) {
+    LogConsole("creating remote box for " + userName);
+    let elementId = `remote-${id}`;
+    let remoteElement = document.getElementById(elementId);
+    if (remoteElement !== null) {
+        LogConsole("element exists");
+        alert("element exists");
+        return;
+    }
+
+    //playing with the idea of tracking the objects and their elements
+    //let recip = new Object();
+    //recip.index = recipientTracker.length;
+    //recip.displayName = userName;
+    //recip.id = id;
+    //recip.element = elementId;
+    //recip.localVideoElement = `video-${id}`;
+    //recipientTracker.push(recip);
+    //create the video card
+    //<div class=videocard>
+    let remoteEl = document.createElement("div");
+    remoteEl.id = "remote-" + id;
+    remoteEl.classList.add("formal-section");
+    remoteEl.classList.add("video-card");
+    remoteEl.classList.add("remote-panel");
+    //Create the video-card-header div
+    //<div class="video-card-header">
+    let elHdr = document.createElement("div");
+    elHdr.classList.add("video-card-header")
+    elHdr.innerHTML = "Remote Participant Video";
+    remoteEl.appendChild(elHdr);
+    //create the video-card-content div
+    //<div class="video-card-content">
+    let elVcc = document.createElement("div");
+    elVcc.classList.add("video-card-content");
+    remoteEl.appendChild(elVcc);
+
+    //create the video-panel div
+    //<div class="video-panel">
+    let elVP = document.createElement("div");
+    elVP.id = "video-" + id;
+    elVP.className = "video-panel";
+    elVcc.appendChild(elVP);
+
+    //Create toolbar
+    let tbEl = document.createElement("div");
+    tbEl.className = "video-panel-toolbar";
+
+    let nmEl = document.createElement("div");
+    nmEl.id = "remote-name-" + id;
+    nmEl.classList.add("text-center");
+    nmEl.innerHTML = userName;
+    tbEl.appendChild(nmEl);
+
+    elVcc.appendChild(tbEl);
+    remoteEl.appendChild(elVcc);
+
+    //remoteEl.innerHTML = newElement;
+    remoteDisplays.appendChild(remoteEl);
+    return id;
 };
 
 async function DisplayRemoteVideo(id, remoteStream) {
     let elId = `video-${id}`;
-    LogConsole(`Trying to display Remote Video at ${elId}`);
-    if (rendererRemote === undefined)
-        rendererRemote = new VideoStreamRenderer(remoteStream);
+    console.log("displaying remote video" + elId);
+ 
+        LogConsole(`Trying to display Remote Video at ${elId}`);
+        if (rendererRemote === undefined)
+            rendererRemote = new VideoStreamRenderer(remoteStream);
 
-    let view = await rendererRemote.createView();
-    if (view !== null) {
-        let el = document.getElementById(elId);
-        if (el === null) {
-            LogConsole(`Can't find element ${elId}, retrying in 5 seconds`);
-            setTimeout(async () => {
-                await DisplayRemoteVideo(id, remoteStream);
-            }, 3000);
-        } else {
-            el.appendChild(view.target);
+        let view = await rendererRemote.createView();
+        if (view !== null) {
+            let el = document.getElementById(elId);
+            if (el === null) {
+                LogConsole(`Can't find element ${elId}, retrying in 3 seconds`);
+                setTimeout(async () => {
+                    await DisplayRemoteVideo(id, remoteStream);
+                }, 3000);
+            } else {
+                let childCount = getChildNodeCount(elId);
+                LogConsole(`childCount: ${childCount}`);
+                if (childCount == 0) {
+                    el.appendChild(view.target);
+                }
+            }
         }
-
-
-    }
+    
 }
 
 async function DisplayRemoteScreenshare(remoteStream) {
@@ -300,59 +365,6 @@ async function DisplayRemoteScreenshare(remoteStream) {
     let el = document.getElementById(elId);
     el.appendChild(viewScreenShare.target);
 }
-
-async function CreateRemoteParticipantElement(id, userName) {
-    LogConsole("creating remote box for " + userName);
-    let elementId = `remote-${id}`;
-    let remoteElement = document.getElementById(elementId);
-    if (remoteElement !== null) {
-        LogConsole("element exists");
-        return;
-    }
-
-    //playing with the idea of tracking the objects and their elements
-    let recip = new Object();
-    recip.index = recipientTracker.length;
-    recip.displayName = userName;
-    recip.id = id;
-    recip.element = elementId;
-    recip.localVideoElement = `video-${id}`;
-    recipientTracker.push(recip);
-
-    let remoteEl = document.createElement("div");
-    remoteEl.id = "remote-" + id;
-    remoteEl.classList.add("col-5");
-    remoteEl.classList.add("formal-section");
-    remoteEl.classList.add("video-card-holder");
-    remoteEl.classList.add("remote-panel");
-    let elH5 = document.createElement("h5");
-    elH5.innerHTML = "Remote Participant Video";
-    remoteEl.appendChild(elH5);
-
-    let elVC = document.createElement("div");
-    elVC.classList.add("video-card");
-    let elVP = document.createElement("div");
-    elVP.id = "video-" + id;
-    elVP.className = "video-panel";
-    elVC.appendChild(elVP);
-
-    //Create toolbar
-    let tbEl = document.createElement("div");
-    tbEl.className = "toolbar";
-
-    let nmEl = document.createElement("div");
-    nmEl.id = "remote-name-" + id;
-    nmEl.classList.add("text-center");
-    nmEl.innerHTML = userName;
-    tbEl.appendChild(nmEl);
-
-    elVC.appendChild(tbEl);
-    remoteEl.appendChild(elVC);
-
-    //remoteEl.innerHTML = newElement;
-    remoteDisplays.appendChild(remoteEl);
-    return id;
-};
 
 function DestroyRemoteParticpantElement(id) {
     let remoteElementEl = "remote-" + id;
@@ -398,16 +410,11 @@ async function DestroyLocalVideo() {
 
 // get the camera selected in the dropdown
 async function GetActiveCamera() {
-    if (!isMobileBrowser) {
-        let list = document.getElementById("camera-list");
-        let cameraId = list.value;
-
-        let cameras = await deviceManager.getCameras();
-        let camera = cameras.filter(cam => cam.id == cameraId)[0];
-        return camera;
-    } else {
-        return cameras[0];
-    }
+    let cameraList = document.getElementById("camera-list");
+    let cameraId = cameraList.options[cameraList.selectedIndex].getAttribute("data-id");
+    let camDeviceInfo = cameras.filter(cam => cam.id == cameraId)[0];
+    activeCamera = camDeviceInfo;
+    return activeCamera;
 };
 
 // load settings from cookies
@@ -415,16 +422,19 @@ function LoadCookieSettings() {
     //see if a different camera was set
     let cameraCheck = getCookie("camera");
     if (cameraCheck !== null) {
+        LogConsole(`Cookie for Camera is: ${cameraCheck}`);
         lastCamera = cameraCheck;
     }
     //see if a different mic was set
     let microphoneCheck = getCookie("microphone");
     if (microphoneCheck !== null) {
+        LogConsole(`Cookie for Microphone is: ${microphoneCheck}`);
         lastMicrophone = parseInt(microphoneCheck);
     }
     //see if a different speaker was set
     let speakerCheck = getCookie("speaker");
     if (speakerCheck !== null) {
+        LogConsole(`Cookie for Speaker is: ${speakerCheck}`);
         lastSpeaker = parseInt(speakerCheck);
     }
 
@@ -432,7 +442,7 @@ function LoadCookieSettings() {
 
 // Setup actions on all the buttons on the screen
 // Join Call, Refresh Participants, Change Camera, Change Microphone, Change Speaker
-function SetupListeners() {
+async function SetupListeners() {
 
     //join video
     btnJoinCall.addEventListener("click", async () => JoinVideo(), false);
@@ -448,12 +458,24 @@ function SetupListeners() {
 
     //change camera
     dropdownCamera.addEventListener("change", async () => {
-        let cameraId = document.getElementById("camera-list").value;
-        setCookie("camera", cameraId);
+        let cameraList = document.getElementById("camera-list");
+        let cameraId = cameraList.options[cameraList.selectedIndex].getAttribute("data-id");
         let camDeviceInfo = cameras.filter(cam => cam.id == cameraId)[0];
+        console.log(camDeviceInfo);
+        activeCamera = camDeviceInfo;
+        LogConsole(`switching to camera ${activeCamera.name}`);
         if (localVideoStream !== undefined) {
-            localVideoStream.switchSource(camDeviceInfo);
+            try {
+                localVideoStream.switchSource(camDeviceInfo);
+            }
+            catch (err) {
+                alert(`Error switching camera.  Camera ${camDeviceInfo.name} may be in use.`);
+                return;
+            }
+            setCookie("camera", cameraList.selectedIndex);
         }
+        
+
     });
 
     //change microphone
@@ -531,14 +553,10 @@ function SetupListeners() {
         
     })
 
-
     
-    //btnAddRemote.addEventListener("click", () => {
-    //    let modal = document.getElementById("contact-modal");
-    //    modal.modal("hide");
-
-
-    //});
+    btnAddRemote.addEventListener("click", () => {
+        AddClientToSession();
+    });
 
     btnShare.addEventListener("click", async () => {
         await ToggleShare();
@@ -594,12 +612,22 @@ function ToggleMediaElement(el) {
 async function ToggleVideo() {
     var newState = await ToggleMediaElement(btnVideoToggle);
     if (newState === 'on') {
+        LogConsole(`turning video on for ${activeCamera.name}`);
         if (localVideoStream === undefined) {
             localVideoStream = await DisplayLocalVideo();
         }
         else {
-            if (localView === undefined)
-                localView = await rendererLocal.createView();
+            if (localView === undefined) {
+                try {
+                    localView = await rendererLocal.createView();
+                }
+                catch (err) {
+                    console.log(err);
+                    alert("Error starting local video.  Camera may be in use in another application.");
+                    var newState = await ToggleMediaElement(btnVideoToggle);
+                    return;
+                }
+            }
             localVideoElement.appendChild(localView.target);
         }
 
@@ -624,7 +652,7 @@ async function ToggleVideo() {
         await DestroyLocalVideo();
 
     }
-    btnVideoToggle.removeAttribute("disabled"); //re-activate
+   
 };
 
 // toggle audio sets the action on the button
@@ -727,7 +755,12 @@ async function ShowParticipantList() {
             partElement.appendChild(option);
 
         });
+        participantCount.innerHTML = `${participants.length} Remote Users`;
+    } else {
+        participantCount.innerHTML = `0 Remote Users`;
     }
+
+  
 };
 
 // Update the UX with the remote participant name
@@ -770,6 +803,32 @@ function ActivateCallDependantElements() {
     }
   
 }
+
+function AddClientToSession() {
+    var contact = new Object();
+    contact.ToName = $("#client-name").val();
+    contact.ToCellNumber = $("#client-cell").val();
+    contact.MeetingId = $("#meetingId").val();
+
+
+    $.ajax({
+        url: '/api/sms/invite',
+        cache: false,
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(contact),
+        success: function (data) {
+            console.log(data);
+            inviteModal.hide();
+        },
+        error: function (a, b, c) {
+            console.log(a, b, c);
+            alert(a);
+            var c = a;
+        }
+    });
+}
+
 
 // Subscribe to a call obj.
 // Listen for property changes and collection updates.
@@ -894,7 +953,9 @@ async function subscribeToRemoteVideoStream(remoteParticipant) {
             console.log(remoteVideoStream.mediaStreamType);
             //remote stream is video - put in video element
             if (remoteVideoStream.mediaStreamType === "Video") {
-                await DisplayRemoteVideo(id, remoteVideoStream);
+                setTimeout(async () => {
+                    await DisplayRemoteVideo(id, remoteVideoStream);
+                }, 6000);
             }
 
             // Participant has switched video off.
@@ -922,8 +983,15 @@ async function subscribeToRemoteVideoStream(remoteParticipant) {
     // Participant has video on initially.
     if (remoteVideoStream.isAvailable) {
         let id = GetId(remoteParticipant.identifier.communicationUserId);
-        await DisplayRemoteVideo(id, remoteVideoStream);
+        setTimeout(async () => {
+            await DisplayRemoteVideo(id, remoteVideoStream);
+        }, 6000);
     }
+}
+
+function getChildNodeCount(element) {
+    let el = document.getElementById(element);
+    return el.childNodes.length;
 }
 
 
@@ -957,7 +1025,7 @@ function isMobileBrowser() {
     } else {
         a = false;
     }
-    LogConsole("Mobile Browser: is " + a);
+    LogConsole("Mobile Browser is " + a);
     return a;
 }
 

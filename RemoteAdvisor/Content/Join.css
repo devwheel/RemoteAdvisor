@@ -1,12 +1,14 @@
-﻿
-
-#participants {
-   
+﻿.main-page {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
+
+
 
 .video-card {
     width: 320px;
-    height: 200px;
+    height: 260px;
     min-width: 200px;
     min-height: 87px;
     display: inline-block;
@@ -21,13 +23,9 @@
     font-size:18px;
 }
 
-.video-card-content {
-   height:100%;
-}
-
 .video-panel {
-   /* height: 200px;*/
     height:100%;
+    min-height:168px;
     background-color: black;
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
@@ -37,7 +35,7 @@
 
 .video-panel-toolbar {
     background-color: silver;
-    min-height: 33px;
+    min-height: 40px;
     padding: 4px 8px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
@@ -50,7 +48,11 @@
     font-size: 14px;
     margin-right: 8px;
 }
-
+.column{ max-width:350px;}
+.add-teams{cursor:pointer;
+           border-radius:5px;
+}
+.add-teams:hover{background-color:mediumpurple;}
 .hidden {
     display: none !important;
 }
@@ -120,7 +122,7 @@
     padding: 8px;
     border-radius: 12px;
     margin-right: 10px;
-    max-width: 350px;
+    width: 350px;
 }
 
 .status-message {
@@ -128,7 +130,9 @@
     vertical-align: middle;
     font-size: smaller;
 }
-
+.log-panel{
+    width:100%;
+}
 .matching-button {
     height: 25px;
     line-height: 1.0;
@@ -148,6 +152,11 @@
     overflow-y: scroll
 }
 
+.participant-panel {
+    display: block;
+    padding: .375rem .75rem;
+}
+
 .off-state {
     background-color: red !important;
     background-image: linear-gradient(to bottom, #8b0000, #b22222, #dc143c, #b22222, #8b0000 );
@@ -165,4 +174,10 @@
 .inactive-control {
     background-color: #5AAAFF;
  
+}
+
+@media only screen and (max-width: 500px) {
+    .main-page{
+        width:395px;
+    }
 }

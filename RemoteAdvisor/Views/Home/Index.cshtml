@@ -7,14 +7,15 @@
 <html>
 <head>
     <title>Remote Advisor</title>
-    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
 
     <link rel="stylesheet" href="/Content/controls.css">
-    <link rel="stylesheet" href="/Content/Join.css">
-    
+    <link rel="stylesheet" href="/Content/Join.css?ver=030123">
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
@@ -23,18 +24,32 @@
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <div id="play"></div>
+    <div class="main-page">
         <h4>Azure Communication Services</h4>
         <h1>Calling Asp.Net Quickstart</h1>
-        <div class="d-flex">
-            <div><h4>Meeting Id</h4></div>
-            <div class="ms-2"><input type="text" id="meetingId" value="@ViewBag.MeetingId" class="form-control" /></div>
-        </div>
-        <div id="call-panel" class="hidden">
+        @if (ViewBag.HasId == false)
+        {
+            <div class="column">
+                <div class="d-flex">
+                    <div class="d-flex"><h5>Meeting Id</h5></div>
+                    <div id="add-teams" class="add-teams ms-auto">
+                        <img height="35" src="~/Images/microsoft-teams-logo.png" data-bs-target="#modal-teams" data-bs-toggle="modal" title="Connect to Teams Meeting" />
+                    </div>
+                </div>
+                <div class="ms-2"><input type="text" id="meetingId" value="@ViewBag.MeetingId" class="" /></div>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" id="meetingId" value="@ViewBag.MeetingId" />
+            <label>@ViewBag.MeetingId</label>
+        }
+    </div>
+
+    <div class="main-page d-flex flex-wrap">
+        <div id="call-panel" class="hidden1">
             <!-- panels for video display -->
-            <div class="row" id="remote-displays">
+            <div class="d-flex flex-row" id="remote-displays">
                 <!-- Local Video Preview-->
                 <div class="formal-section">
                     <h5>Participants</h5>
@@ -58,12 +73,13 @@
                 </div>
             </div>
         </div>
-
+    </div>
+    <div class="main-page d-flex flex-wrap">
         <!-- Device Selector and Remote Participant List -->
-        <div id="media-selectors" class="row">
-            <div class="col-5 formal-section">
+        <div id="media-selectors">
+            <div class="formal-section">
                 <h5>Call Devices</h5>
-                <div id="device-list" class="col hidden">
+                <div id="device-list" class="hidden1">
                     <div id="cameras" class="dropdown-area">
                         <label labelfor="camera-list">
                             Cameras
@@ -71,7 +87,6 @@
                             </select>
                         </label>
                     </div>
-
                     <div id="mics" class="dropdown-area">
                         <label labelfor="mic-list">
                             Microphones
@@ -79,7 +94,7 @@
                             </select>
                         </label>
                     </div>
-                    <div id="speakers" class="dropdown-area">
+                    <div id="speakers" class="dropdown-area hidden">
                         <label labelfor="speaker-list">
                             Speakers
                             <select id="speaker-list" class="form-select">
@@ -91,24 +106,26 @@
                     <h5 class="ms-3">Loading Devices...</h5>
                 </div>
             </div>
+        </div>
 
-            <div id="participant-panel" class="col-5 formal-section call-dependant hidden">
-                <div id="partipant-list">
-                    <div class="col">
-                        <h5>
-                            Call Participants&nbsp;<i id="refresh-participants" style="color:blue !important; font-size:18px; display: inline; cursor: pointer;" class="fas fa-sync-alt"></i>
-                        </h5>
-                        <select id="participants" size="3" class="form-control">
-                        </select>
+        <div id="participant-panel" class="formal-section participant-panel call-dependant hidden1">
+            <div id="partipant-list">
+                <div>
+                    <div class="d-flex">
+                        <div><h5>Call Participants</h5></div><div class="ms-auto"><i id="refresh-participants" style="color:blue !important; font-size:18px; display: inline; cursor: pointer;" class="fas fa-sync-alt"></i></div>
                     </div>
+                    <select id="participants" size="3" class="form-control">
+                    </select>
                 </div>
             </div>
         </div>
+
+
         <!-- Call Status and Remote Participant Counts -->
-        <div id="call-info" class="row call-dependant hidden">
-            <div class="col-5 formal-section">
+        <div id="call-info" class="call-dependant hidden1">
+            <div class="formal-section">
                 <h5>Call Status</h5>
-                <div id="status-bar1" class="col-5">
+                <div id="status-bar1">
                     <div id="status-box">
                         <div class="status-box" title="Call Status">
                             <span class="status-message"><i class='fas fa-phone toolbar-icon'></i></span>
@@ -124,19 +141,31 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-5 formal-section">
+        <!-- Logging information-->
+        <div class="log-panel">
+            <div class="formal-section">
                 <div class="d-flex">
                     <h5>Logs</h5>
                     <div class="ms-auto ml-auto">
                         <i id="show-logs" class="fas fa-angle-down"></i>
                     </div>
                 </div>
-                <div id="console-out" class="log-console hidden"></div>
+                <div id="console-out" class="log-console hidden1"></div>
             </div>
         </div>
     </div>
-    <!--Modal Dialog-->
+    <div id="root"></div>
+    <div id="screen-share" class="draggable screenshare-panel hidden">
+        <div id="screen-share-title" style="border:1px solid #373737;cursor:move">Screen Share</div>
+        <div id="screen-share-content"></div>
+        <div id="screen-share-toolbar">
+        </div>
+    </div>
+    <input type="hidden" id="login-name" />
+    <input type="hidden" id="token" />
+    <input type="hidden" id="token-expires" />
+    <input type="hidden" id="userid" />
+    <input type="hidden" id="email" />
     <div class="modal" id="modal-login" tabindex="-1" role="dialog" data-bs-keyboard="false" data-bs-backdrop="static">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -157,18 +186,6 @@
             </div>
         </div>
     </div>
-    <div id="root"></div>
-    <div id="screen-share" class="draggable screenshare-panel hidden">
-        <div id="screen-share-title" style="border:1px solid #373737;cursor:move">Screen Share</div>
-        <div id="screen-share-content"></div>
-        <div id="screen-share-toolbar">
-        </div>
-    </div>
-    <input type="hidden" id="login-name" />
-    <input type="hidden" id="token" />
-    <input type="hidden" id="token-expires" />
-    <input type="hidden" id="userid" />
-    <input type="hidden" id="email" />
 
     <div id="contact-modal" class="modal fade" role="dialog" aria-labelledby="groupModal" aria-hidden="true" data-keyboard="false" data-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered video">
@@ -195,47 +212,48 @@
                     <hr />
                 </div>
                 <div class="modal-footer">
-                    <button id="btnCloseAddRemote" class="btn btn-secondary" data-bs-dismiss="modal" >Cancel</button>
-                    <button id="btnAddRemote" class="btn btn-secondary" onclick="AddClientToSession()" >Invite</button>
+                    <button id="btnCloseAddRemote" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button id="btnAddRemote" class="btn btn-secondary">Invite</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="~/Scripts/App/Bundle.js?ver=1234"></script>
+    <div class="modal" id="modal-teams" tabindex="-1" role="dialog" data-bs-keyboard="false" data-bs-backdrop="static">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Link to Teams Meeting</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter the teams join link:</p>
+                    <input type="text" id="new-id" class="form-control" />
+                </div>
+                <div class="modal-footer">
+                    <button id="btnUpdateMeeting" type="button" class="btn btn-primary btn-default" onclick="ChangeId()">Save</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Scripts/App/Bundle.js?ver=030123"></script>
     <script>
         $(".draggable").draggable();
-        $(".draggable").show();
-        var inviteModal = document.getElementById('contact-modal')
-        var contactName = document.getElementById('client-name')
-        inviteModal.addEventListener('shown.bs.modal', function () {
-            contactName.focus()
-        })
-
-        function AddClientToSession() {
-            var contact = new Object();
-            contact.ToName = $("#client-name").val();
-            contact.ToCellNumber = $("#client-cell").val();
-            contact.MeetingId = $("#meetingId").val();
-           
-
-            $.ajax({
-                url: '/api/sms/invite',
-                cache: false,
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(contact),
-                success: function (data) {
-                    console.log(data);
-                    inviteModal.hide();
-                },
-                error: function (a, b, c) {
-                    alert(a);
-                    var c = a;
-                }
-            });
+                    //$(".draggable").show();
+        function ChangeId() {
+            let teamsId = document.getElementById("new-id").value;
+            if (teamsId.startsWith("https://teams")) {
+                document.getElementById("meetingId").value = teamsId;
+            }
+            else {
+                alert('Please enter a valid teams meeting link');
+            }
+            $("#modal-teams").modal("hide");
         }
-
     </script>
 
 

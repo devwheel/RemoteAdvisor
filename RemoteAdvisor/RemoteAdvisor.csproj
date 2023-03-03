@@ -252,6 +252,7 @@
     <Content Include="Images\Docs\image009.png" />
     <Content Include="Images\Docs\image011.png" />
     <Content Include="Images\Docs\image013.png" />
+    <Content Include="Images\microsoft-teams-logo.png" />
     <Content Include="Scripts\App\Bundle.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

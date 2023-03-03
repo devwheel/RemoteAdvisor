@@ -20,9 +20,15 @@ namespace RemoteAdvisor.Controllers
 
         public async Task<IHttpActionResult> SendAcsSMS(SmsRequest request)
         {
-            SmsProvider provider = new SmsProvider();
-            var response = await provider.SendMeetingInviteAsync(request.ToCellNumber.ToACSNumber(), request.ToName, request.MeetingId);
-            return Ok(response);
+            try
+            {
+                SmsProvider provider = new SmsProvider();
+                var response = await provider.SendMeetingInviteAsync(request.ToCellNumber.ToACSNumber(), request.ToName, request.MeetingId);
+                return Ok(response);
+            }catch(Exception ex)
+            {
+                return ResponseMessage(Request.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message));
+            }
         }
         #endregion
     }

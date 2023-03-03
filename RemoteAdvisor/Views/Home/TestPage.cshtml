@@ -21,35 +21,20 @@
 </head>
 <body>
 
-    <div class="container">
-        <h4>Test Page</h4>
-        <div>
-            <button onclick="AddEl()">Add Element</button>
-            <button onclick="ReferenceEl()">Reference Element</button>
+    <div class="video-card-content1">
+        <div id="video" class="video-panel"><div style="width: 100%; height: 100%; transform: rotateY(180deg);"><video playsinline="true" disablepictureinpicture="" autoplay="" style="width: 100%; height: 100%; object-fit: fill; transform: scaleX(-1);"></video></div></div>
+        <div id="video-bar" class="video-panel-toolbar">
+            <div id="toolbar" class="d-flex flex-wrap">
+                <div id="local-video-switch" class="media-control fa on-state fa-video" data-state="on" title="Turn off Camera" data-on="fa-video" data-off="fa-video-slash" data-ontitle="Turn on Camera" data-offtitle="Turn off Camera"></div>
+                <div id="local-microphone-switch" class="media-control off-state fas fa-microphone-slash" data-state="off" title="Turn on Microphone" data-on="fa-microphone" data-off="fa-microphone-slash" data-ontitle="Turn on Microphone" data-offtitle="Turn off Microphone"></div>
+                <div id="video-button" class="on-state media-control fas fa-phone hidden" data-state="off"><span>Connect</span></div>
+                <div id="hang-up-button" class="off-state media-control fas fa-phone-slash"><span>Hang Up</span></div>
+                <div id="local-video-toggler" class="media-control off-state fas fa-expand-arrows-alt call-dependant" data-state="off" title="View small preview window" data-on="fa-window-restore" data-off="fa-expand-arrows-alt" data-offclass="small-preview" data-offclasstarget="local-panel" data-ontitle="Restore local preview window" data-offtitle="Reduce local preview window"></div>
+                <div id="invite-remote-button" class="media-control on-state fas fa-user-plus call-dependant" data-state="on" data-bs-target="#contact-modal" data-bs-toggle="modal" title="Invite Mobile Pariticipant"></div>
+                <div id="btn-share" class="media-control off-state fas fa-share-square call-dependant" data-state="off" title="Start sharing" data-on="fas fa-times" data-off="fas fa-share-square" data-ontitle="" data-offtitle=""></div>
+            </div>
         </div>
-        <div id="dyndivs" class="d-flex flex-row">
-
-        </div>
-    </div>   
-    <script>
-        let index = 10;
-        let lastEl = '';
-        let divParent = document.getElementById("dyndivs");
-        function AddEl() {
-            lastEl = `dyn-${index}`;
-            let el = document.createElement("div");
-            el.classList = "dynamic";
-            el.id = lastEl;
-            divParent.appendChild(el);
-            index = index + 20;
-        }
-        function ReferenceEl() {
-            var el = document.getElementById(lastEl);
-            console.log("last element", el);
-
-        }
- 
-    </script>
+    </div>
 
 </body>
 </html>
