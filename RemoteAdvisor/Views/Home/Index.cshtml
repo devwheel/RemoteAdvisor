@@ -29,14 +29,14 @@
         <h1>Calling Asp.Net Quickstart</h1>
         @if (ViewBag.HasId == false)
         {
-            <div class="column">
-                <div class="d-flex">
-                    <div class="d-flex"><h5>Meeting Id</h5></div>
+            <div class="align-self-center">
+                <div class="d-flex align-self-center" >
+                    <div >Meeting Id</div>
                     <div id="add-teams" class="add-teams ms-auto">
-                        <img height="35" src="~/Images/microsoft-teams-logo.png" data-bs-target="#modal-teams" data-bs-toggle="modal" title="Connect to Teams Meeting" />
+                        <img height="30" src="~/Images/microsoft-teams-logo.png" data-bs-target="#modal-teams" data-bs-toggle="modal" title="Connect to Teams Meeting" />
                     </div>
                 </div>
-                <div class="ms-2"><input type="text" id="meetingId" value="@ViewBag.MeetingId" class="" /></div>
+                <div class="meeting-id"><input type="text" id="meetingId" value="@ViewBag.MeetingId" class="" /></div>
             </div>
         }
         else
@@ -49,14 +49,12 @@
     <div class="main-page d-flex flex-wrap">
         <div id="call-panel" class="hidden1">
             <!-- panels for video display -->
-            <div class="d-flex flex-wrap" >
+            <div class="d-flex flex-wrap">
                 <!-- Local Video Preview-->
                 <div class="formal-section">
-                    <h5>Participants</h5>
                     <div id="local-panel" class="video-card">
-                        <div class="video-card-header">My Video Preview</div>
                         <div class="video-card-content">
-                            <div id="video" class="video-panel"></div>
+                            <div id="video" class="video-panel">Local Preview</div>
                             <div id="video-bar" class="video-panel-toolbar">
                                 <div id="toolbar" class="d-flex flex-wrap hidden">
                                     <div id="local-video-switch" class="media-control off-state fa fa-video-slash" data-state="off" title="Turn on Camera" data-on="fa-video" data-off="fa-video-slash" data-onTitle="Turn on Camera" data-offTitle="Turn off Camera"></div>
@@ -71,10 +69,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <div class="formal-section">
-                    <div id="remote-displays"></div>
-                </div>
+
+                <div id="remote-displays"></div>
             </div>
         </div>
     </div>

@@ -140,7 +140,7 @@ async function Init(token) {
 
     //Load Device Dropdowns with Devices
     await LoadDeviceDropdowns(deviceManager);
- 
+    await GetActiveCamera();
     btnJoinCall.classList.remove("hidden");
 }
 
@@ -305,9 +305,12 @@ async function DisplayLocalVideo() {
         }
         rendererLocal = new VideoStreamRenderer(localVideoStream);
         localView = await rendererLocal.createView();
+        localVideoElement.innerHTML = "";
         if (getChildNodeCount('video') === 0) {
+           
             localVideoElement.appendChild(localView.target);
         }
+
         return localVideoStream;
     }
     else {
@@ -452,6 +455,7 @@ async function DestroyLocalVideo() {
     while (video.lastElementChild) {
         video.removeChild(video.lastElementChild);
     }
+    localVideoElement.innerHTML = "Local Preview";
     if (localView !== undefined) {
         localView.dispose();
         localView = undefined;
@@ -472,20 +476,17 @@ function LoadCookieSettings() {
     //see if a different camera was set
     let cameraCheck = getCookie("camera");
     if (cameraCheck !== null) {
-        LogConsole(`Cookie for Camera is: ${cameraCheck}`);
         lastCamera = cameraCheck;
     }
     //see if a different mic was set
     let microphoneCheck = getCookie("microphone");
     if (microphoneCheck !== null) {
-        LogConsole(`Cookie for Microphone is: ${microphoneCheck}`);
-        lastMicrophone = parseInt(microphoneCheck);
+        lastMicrophone = microphoneCheck;
     }
     //see if a different speaker was set
     let speakerCheck = getCookie("speaker");
     if (speakerCheck !== null) {
-        LogConsole(`Cookie for Speaker is: ${speakerCheck}`);
-        lastSpeaker = parseInt(speakerCheck);
+        lastSpeaker = speakerCheck;
     }
 
 };
@@ -672,8 +673,8 @@ async function ToggleVideo() {
                     localView = await rendererLocal.createView();
                 }
                 catch (err) {
-                    console.log(err);
-                    alert("Error starting local video.  Camera may be in use in another application.");
+                    LogConsole("Error creating local view: " + err);
+                    
                     var newState = await ToggleMediaElement(btnVideoToggle);
                     return;
                 }

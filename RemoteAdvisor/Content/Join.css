@@ -35,15 +35,16 @@
     border-top-right-radius: 10px;
     overflow: hidden;
     border: 1px solid black;
+    color:white;
 }
 
 .video-panel-toolbar {
-    background-color: silver;
+    background-color: black;
     min-height: 26px;
     padding: 4px 8px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
-    background-image: linear-gradient(to bottom, black, #232023, #373737, #232023, black);
+    /*background-image: linear-gradient(to bottom, black, #232023, #373737, #232023, black);*/
     color:white;
     line-height:1;
 }
@@ -138,6 +139,13 @@
     vertical-align: middle;
     font-size: smaller;
 }
+
+.meeting-id > input{
+    max-width:100%;
+    width:100%;
+}
+
+
 .log-panel{
     width:100%;
 }
