@@ -17,6 +17,10 @@
     margin: 10px;
 }
 
+.video-card-content{
+  
+}
+
 .video-card-header {
     text-align: left !important;
     font-weight:bold;
@@ -35,13 +39,17 @@
 
 .video-panel-toolbar {
     background-color: silver;
-    min-height: 40px;
+    min-height: 26px;
     padding: 4px 8px;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
     background-image: linear-gradient(to bottom, black, #232023, #373737, #232023, black);
+    color:white;
+    line-height:1;
 }
-
+.video-panel-toolbar-speaking{
+    color: lightpink !important;
+}
 .toolbar-icon {
     background-color: white;
     color: #007bff !important;
@@ -133,6 +141,7 @@
 .log-panel{
     width:100%;
 }
+
 .matching-button {
     height: 25px;
     line-height: 1.0;

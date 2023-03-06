@@ -20,6 +20,7 @@ let microphones;
 let speakers;
 let showLogs = false;
 let recipientTracker = [];
+let talkTimer;
 
 let lastCamera = 0;
 let lastMicrophone = 0;
@@ -148,6 +149,7 @@ async function Init(token) {
 // ********************************************************************* */
 async function JoinVideo() {
     // Turn on Video if it is not there
+    await GetActiveCamera();
     if (localVideoStream === undefined) {
         localVideoStream = new LocalVideoStream(activeCamera);
         await ToggleVideo(); //need to fix
@@ -170,7 +172,7 @@ async function JoinVideo() {
     await subscribeToCall(call);
 
     await ShowCallState(call);  //Connecting..=> connected
-    ShowParticipantList();
+    await ShowParticipantList();
     //UX Settings for a connected call
   
     ActivateCallDependantElements();
@@ -248,7 +250,53 @@ async function LoadDeviceDropdowns(deviceMgr) {
     document.getElementById("toolbar").classList.remove("hidden");
 }
 
+function IsRemoteParticipantSpeakingCheck(state) {
+    if (state == true) {
+        if (call !== undefined) {
+            talkTimer = setInterval(() => {
+                for (let i = 0; i < call.remoteParticipants.length; i++) {
+                    let speakerId = GetId(call.remoteParticipants[i].identifier.communicationUserId);
+                    if (call.remoteParticipants[i].isSpeaking) {
+                        //clear is speaking style on all remotes
+                        let remotes = document.querySelectorAll(".remote-name-panel");
+                        LogConsole(`[IsRemoteParticipantSpeakingCheck] remotes=${remotes.length}`);
+                        //remotes.forEach((remote) => {
+                        //    let name = remote.getAttribute("data-name");
+                        //    LogConsole(`[IsRemoteParticipantSpeakingCheck] resetting ${name}`);
+                        //    let remoteId = remote.getAttribute("id");
+                        //    console.log(remote);
+                        //    remote.innerHTML = name + "reset";
+                        //    let namePanel = document.getElementById(remoteId);
+                        //    //namePanel.style.display = "none";
+                        //    namePanel.innerHTML = name;
+                        //    LogConsole(document.getElementById(remoteId).innerHTML);
+                        //})
+                        //add is speaking style to this remote
+                        let targetNameId = `remote-speaker-${speakerId}`;
+                        let remoteNameEl = document.getElementById(targetNameId);
+                        remoteNameEl.classList.remove("hidden");
+
+                        LogConsole(`[IsRemoteParticipantSpeakingCheck] ${remoteName} is speaking`);
+                    }
+                    else {
+                        //remote participant is not speaking so hide the is speaking style
+                        let targetNameId = `remote-name-${speakerId}`;
+                        let remoteNameEl = document.getElementById(targetNameId);
+                        let remoteName = remoteNameEl.getAttribute("data-name");
+                        remoteNameEl.classList.add("hidden");
+                    }
+                }
+            }, 5000)
+        }
+    }
+    else {
+        clearInterval(talkTimer);
+    }
+}
+
+
 async function DisplayLocalVideo() {
+
     if (localView === undefined) {
         if (localVideoStream === undefined) {
             activeCamera = await GetActiveCamera();
@@ -257,11 +305,13 @@ async function DisplayLocalVideo() {
         }
         rendererLocal = new VideoStreamRenderer(localVideoStream);
         localView = await rendererLocal.createView();
-        localVideoElement.appendChild(localView.target);
+        if (getChildNodeCount('video') === 0) {
+            localVideoElement.appendChild(localView.target);
+        }
         return localVideoStream;
     }
     else {
-        alert('local video already exists');
+        LogConsole("[DisplayLocalVideo]  local video already displayed");
     }
 };
 
@@ -275,19 +325,9 @@ async function CreateRemoteParticipantElement(id, userName) {
         return;
     }
 
-    //playing with the idea of tracking the objects and their elements
-    //let recip = new Object();
-    //recip.index = recipientTracker.length;
-    //recip.displayName = userName;
-    //recip.id = id;
-    //recip.element = elementId;
-    //recip.localVideoElement = `video-${id}`;
-    //recipientTracker.push(recip);
-    //create the video card
-    //<div class=videocard>
     let remoteEl = document.createElement("div");
     remoteEl.id = "remote-" + id;
-    remoteEl.classList.add("formal-section");
+   // remoteEl.classList.add("formal-section");
     remoteEl.classList.add("video-card");
     remoteEl.classList.add("remote-panel");
     //Create the video-card-header div
@@ -300,6 +340,7 @@ async function CreateRemoteParticipantElement(id, userName) {
     //<div class="video-card-content">
     let elVcc = document.createElement("div");
     elVcc.classList.add("video-card-content");
+    elVcc.id = `remote-video-${id}`;
     remoteEl.appendChild(elVcc);
 
     //create the video-panel div
@@ -311,10 +352,19 @@ async function CreateRemoteParticipantElement(id, userName) {
 
     //Create toolbar
     let tbEl = document.createElement("div");
-    tbEl.className = "video-panel-toolbar";
+    tbEl.className = "video-panel-toolbar justify-content-center d-flex";
+
+    let nmIco = document.createElement("i");
+    nmIco.id = "remote-speaker-" + id;
+    nmIco.className = "fas fa-volume-up hidden me-2";
+
+    tbEl.appendChild(nmIco);
+    
 
     let nmEl = document.createElement("div");
     nmEl.id = "remote-name-" + id;
+    nmEl.setAttribute("data-name", userName);
+    nmEl.classList.add("remote-name-panel");
     nmEl.classList.add("text-center");
     nmEl.innerHTML = userName;
     tbEl.appendChild(nmEl);
@@ -517,8 +567,8 @@ async function SetupListeners() {
         ToggleAudio();
         call.dispose();
         call = undefined;
-        videoSwitch.classList.remove("active-control");
-        videoSwitch.classList.add("inactive-control");
+        btnVideoToggle.classList.remove("active-control");
+        btnVideoToggle.classList.add("inactive-control");
 
     });
 
@@ -756,6 +806,10 @@ async function ShowParticipantList() {
 
         });
         participantCount.innerHTML = `${participants.length} Remote Users`;
+        if (participants.length === 0) {
+            //turn off speaker checking
+            IsRemoteParticipantSpeakingCheck(false);
+        }
     } else {
         participantCount.innerHTML = `0 Remote Users`;
     }
@@ -904,6 +958,7 @@ async function subscribeToRemoteParticipant(remoteParticipant) {
                     await CreateRemoteParticipantElement(id, remoteParticipant.displayName);
                     ShowParticipantList();
                 }, 3000)
+                IsRemoteParticipantSpeakingCheck(true);
             }
             if (remoteParticipant.state === 'Disconnected') {
                 //Remote Participant hung up so remove the element
